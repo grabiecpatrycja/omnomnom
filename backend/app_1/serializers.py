@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Nutrition
+from app_1.models import Nutrition
 
 class NutritionSerializer(serializers.ModelSerializer):
     class Meta:
