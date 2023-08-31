@@ -1,5 +1,6 @@
 class Nutrition {
-  final String id;
+  final String name;
+  final int id;
 
-  const Nutrition({required this.id});
+   const Nutrition({required this.name, required this.id});
 }
