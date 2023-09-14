@@ -17,5 +17,8 @@ class ProductNutrition(models.Model):
     nutrition = models.ForeignKey(Nutrition, on_delete=models.CASCADE)
     value = models.FloatField()
 
+    class Meta:
+        unique_together = ["product", "nutrition"]
+
     def __str__(self):
         return f"{self.product} - {self.nutrition}"
