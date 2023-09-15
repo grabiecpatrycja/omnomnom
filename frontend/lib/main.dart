@@ -80,10 +80,25 @@ class MyScaffold extends StatelessWidget {
 
 void main() {
   runApp(
-    const MaterialApp(
+    MaterialApp(
       title: 'My app', // used by the OS task switcher
       home: SafeArea(
-        child: MyScaffold(),
+        child: DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              bottom: TabBar(tabs: [
+                Tab(icon: Icon(Icons.abc)),
+                Tab(icon: Icon(Icons.ac_unit))
+              ]),
+              title: Text('Calories')
+            ),
+            body: TabBarView(children: [
+              MyScaffold(),
+              const Text('heh'),
+            ])
+          )
+        ),
       ),
     ),
   );
