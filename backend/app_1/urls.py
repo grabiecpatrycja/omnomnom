@@ -3,5 +3,5 @@ from app_1.views import NutritionViewSet, ProductViewSet
 
 router = DefaultRouter()
 router.register(r'nutritions', NutritionViewSet, basename="nutritions")
-router.register(r'products', ProductViewSet)
+router.register(r'products', ProductViewSet, basename="products")
 urlpatterns = router.urls
