@@ -13,8 +13,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
 
     @action(detail=True, methods=['PUT'], serializer_class=ProductNutritionSerializer)
-    
-    def nutritions(self, request, pk=None, nutrition_pk=None):
+    def nutritions(self, request, pk=None):
         data = request.data
         nutrition = data.get('nutrition')
         product = Product.objects.get(pk=pk)
