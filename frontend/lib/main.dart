@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:calcounter/entry.dart';
+import 'package:calcounter/http/nutrition.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'nutrition.dart' as model;
@@ -29,6 +31,7 @@ class NutritionsWidget extends StatefulWidget {
 class NutritionsWidgetState extends State<NutritionsWidget> {
   List<model.Nutrition> nutritions = [];
   late Future<List<model.Nutrition>> nutritionsResponse;
+  final textController = TextEditingController();
 
   @override
   void initState() {
@@ -36,26 +39,57 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
     nutritionsResponse = fetchNutritions();
   }
 
+
   @override
   Widget build(BuildContext context) {
+    var that = this;
     return Column(children: [
       Spacer(),
       Expanded(child: Text('These are the nutritions you want to keep track of')),
       FutureBuilder(future: nutritionsResponse, builder: (context, snapshot) {
         if (snapshot.hasData) {
           List<Widget> buttons = snapshot.data!.map((e) {
-            ElevatedButton the_button = ElevatedButton(child: Text(e.name), onPressed: null,);
+            Widget the_button = NutritionEntry(e.id, e.name, () => that.setState(() {
+              nutritionsResponse = fetchNutritions();
+            }));
+            //     padding: EdgeInsets.all(4),
+            //     child: ElevatedButton(child: Text(e.name), onPressed: () {}, onHover: (s) {
+            //       debugPrint(this.toString());
+            //     })
+            // );this
             // return Row(children: [the_button], mainAxisAlignment: MainAxisAlignment.center,);
             return the_button;
           }).toList();
 
-          return Column(children:
+          return Column(mainAxisAlignment: MainAxisAlignment.center, children:
           [
             Row(children: buttons, mainAxisAlignment: MainAxisAlignment.center,),
-            SizedBox(height: 10,),
-            ElevatedButton(child: Text('+'), onPressed: null,),
-          ],
-              mainAxisAlignment: MainAxisAlignment.center);
+            const SizedBox(height: 10,),
+            ElevatedButton(child: Text('+'), onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('New nutrition name'),
+                      content: TextField(controller: textController),
+                      actions: <Widget>[
+                        MaterialButton(
+                          color: Colors.green,
+                          textColor: Colors.white,
+                          child: const Text('OK'),
+                          onPressed: () {
+                            NutritionService.addNutrition(textController.text).whenComplete(() => that.setState(() {
+                              nutritionsResponse = fetchNutritions();
+                            }));
+                            Navigator.pop(context);
+                          }
+                        )
+                      ]
+                    );
+                  }
+              );
+            })
+          ]);
         }
         else {
           return Text('Downloading');
@@ -78,7 +112,7 @@ class MyScaffold extends StatelessWidget {
   }
 }
 
-void main() {
+Future<void> main() async {
   runApp(
     MaterialApp(
       title: 'My app', // used by the OS task switcher
