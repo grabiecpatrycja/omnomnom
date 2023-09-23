@@ -14,18 +14,18 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['PUT'], serializer_class=ProductNutritionSerializer)
     def nutritions(self, request, pk=None):
-        data = request.data
-        nutrition = data.get('nutrition')
         product = Product.objects.get(pk=pk)
+        data = request.data
+        for d in data:
+            nutrition = d.get('nutrition')
+            try:
+                product_nutrition = ProductNutrition.objects.get(product=product, nutrition=nutrition)
+                serializer = ProductNutritionSerializer(product_nutrition, data=d)
+            except ProductNutrition.DoesNotExist:
+                serializer = ProductNutritionSerializer(data=d)
 
-        try:
-            product_nutrition = ProductNutrition.objects.get(product=product, nutrition=nutrition)
-            serializer = ProductNutritionSerializer(product_nutrition, data=data)
-        except ProductNutrition.DoesNotExist:
-            serializer = ProductNutritionSerializer(data=data)
-
-        if serializer.is_valid():
-            serializer.save(product=product)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                serializer.save(product=product)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_201_CREATED)
