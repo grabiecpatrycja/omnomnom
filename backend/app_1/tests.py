@@ -105,6 +105,13 @@ class ProductNutritionTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(ProductNutrition.objects.count(), 2)
 
+    def test_create_object_error(self):
+        data = [{'product':self.product.id, 'nutrition': self.nutrition_1.id, 'value': 120},{'product':self.product.id, 'nutrition': self.nutrition_2.id, 'value': "króliczek"}]
+        url = reverse('products-nutritions', args=[self.product.id])
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ProductNutrition.objects.count(), 0)
+
     def test_update_object(self):
         object_1 = ProductNutrition.objects.create(product=self.product, nutrition=self.nutrition_1, value=120)
         object_2 = ProductNutrition.objects.create(product=self.product, nutrition=self.nutrition_2, value=20)

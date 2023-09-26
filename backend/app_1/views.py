@@ -26,8 +26,6 @@ class ProductViewSet(viewsets.ModelViewSet):
             except ProductNutrition.DoesNotExist:
                 serializer = ProductNutritionSerializer(data=d)
 
-            if serializer.is_valid():
-                serializer.save(product=product)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(product=product)
         return Response(status=status.HTTP_201_CREATED)
