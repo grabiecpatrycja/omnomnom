@@ -22,3 +22,10 @@ class ProductNutrition(models.Model):
 
     def __str__(self):
         return f"{self.product} - {self.nutrition}"
+
+class EatenRecord(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    mass = models.FloatField()
+
+    def __str__(self):
+        return f"{self.product} - {self.mass}"
