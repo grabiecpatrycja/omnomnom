@@ -3,7 +3,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from app_1.models import Nutrition, Product, ProductNutrition
-from app_1.serializers import NutritionSerializer, ProductSerializer, ProductNutritionSerializer
+from app_1.serializers import NutritionSerializer, ProductSerializer, ProductNutritionSerializer, EatenRecordSerializer
 
 class NutritionViewSet(viewsets.ModelViewSet):
     queryset = Nutrition.objects.all()
@@ -28,4 +28,13 @@ class ProductViewSet(viewsets.ModelViewSet):
 
             serializer.is_valid(raise_exception=True)
             serializer.save(product=product)
+        return Response(status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['POST'], serializer_class=EatenRecordSerializer)
+    def eat(self, request, pk=None):
+        product = Product.objects.get(pk=pk)
+        data = request.data
+        serializer = EatenRecordSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(product=product)
         return Response(status=status.HTTP_201_CREATED)

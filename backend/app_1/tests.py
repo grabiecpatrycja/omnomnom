@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from app_1.models import Nutrition, Product, ProductNutrition
+from app_1.models import Nutrition, Product, ProductNutrition, EatenRecord
 
 class NutritionTestCase(TestCase):
     def setUp(self):
@@ -91,6 +91,7 @@ class ProductTestCase(TestCase):
         with self.assertRaises(Product.DoesNotExist):
             object.refresh_from_db()
 
+
 class ProductNutritionTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -125,3 +126,15 @@ class ProductNutritionTestCase(TestCase):
         self.assertEqual(object_2.value, 40)
         self.assertEqual(ProductNutrition.objects.count(), 2)
 
+
+class EatenRecordTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.product = Product.objects.create(name='test_product')
+
+    def test_create_object(self):
+        data = {'product':self.product.id, 'mass': 100}
+        url = reverse('products-eat', args=[self.product.id])
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(EatenRecord.objects.count(), 1)
