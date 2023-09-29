@@ -6,15 +6,16 @@ class NutritionSerializer(serializers.ModelSerializer):
         model = Nutrition
         fields = '__all__'
 
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
-
 class ProductNutritionSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = ProductNutrition
+        fields = '__all__'
+
+class ProductSerializer(serializers.ModelSerializer):
+    nutrition_entries = ProductNutritionSerializer(many=True)
+    class Meta:
+        model = Product
         fields = '__all__'
 
 class EatenRecordSerializer(serializers.ModelSerializer):

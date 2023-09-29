@@ -13,7 +13,7 @@ class Product(models.Model):
         return self.name
     
 class ProductNutrition(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="nutrition_entries")
     nutrition = models.ForeignKey(Nutrition, on_delete=models.CASCADE)
     value = models.FloatField()
 
