@@ -16,7 +16,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['PUT'], serializer_class=ProductNutritionSerializer)
     @transaction.atomic
     def nutritions(self, request, pk=None):
-        product = Product.objects.get(pk=pk)
+        product = self.get_object()
         data = request.data
         for d in data:
             nutrition = d.get('nutrition')
@@ -32,9 +32,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['POST'], serializer_class=EatenRecordSerializer)
     def eat(self, request, pk=None):
-        product = Product.objects.get(pk=pk)
-        data = request.data
-        serializer = EatenRecordSerializer(data=data)
+        product = self.get_object()
+        serializer = EatenRecordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(product=product)
         return Response(status=status.HTTP_201_CREATED)
