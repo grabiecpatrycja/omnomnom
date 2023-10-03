@@ -2,20 +2,10 @@ import 'dart:convert';
 
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
+import 'package:calcounter/product/main.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:go_router/go_router.dart';
 import 'nutrition.dart' as model;
-
-Future<List<model.Nutrition>> fetchNutritions() async {
-  final response = await http.get(Uri.parse('http://localhost:8000/api/nutritions'));
-  final data = jsonDecode(response.body);
-  List<model.Nutrition> nutritions = [];
-
-  for (final entry in data) {
-    nutritions.add(model.Nutrition(name: entry['name'], id: entry['id']));
-  }
-  return nutritions;
-}
 
 class NutritionsWidget extends StatefulWidget {
   const NutritionsWidget({super.key});
@@ -36,7 +26,7 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
   @override
   void initState() {
     super.initState();
-    nutritionsResponse = fetchNutritions();
+    nutritionsResponse = NutritionService.fetchNutritions();
   }
 
 
@@ -50,7 +40,7 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
         if (snapshot.hasData) {
           List<Widget> buttons = snapshot.data!.map((e) {
             Widget the_button = NutritionEntry(e.id, e.name, () => that.setState(() {
-              nutritionsResponse = fetchNutritions();
+              nutritionsResponse = NutritionService.fetchNutritions();
             }));
             //     padding: EdgeInsets.all(4),
             //     child: ElevatedButton(child: Text(e.name), onPressed: () {}, onHover: (s) {
@@ -79,7 +69,7 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
                           child: const Text('OK'),
                           onPressed: () {
                             NutritionService.addNutrition(textController.text).whenComplete(() => that.setState(() {
-                              nutritionsResponse = fetchNutritions();
+                              nutritionsResponse = NutritionService.fetchNutritions();
                             }));
                             Navigator.pop(context);
                           }
@@ -113,6 +103,11 @@ class MyScaffold extends StatelessWidget {
 }
 
 Future<void> main() async {
+  final router = GoRouter(
+    navigatorKey: GlobalKey(),
+    initialLocation: '/',
+    routes: <RouteBase>[]
+  );
   runApp(
     MaterialApp(
       title: 'My app', // used by the OS task switcher
@@ -129,7 +124,7 @@ Future<void> main() async {
             ),
             body: TabBarView(children: [
               MyScaffold(),
-              const Text('heh'),
+              Products(),
             ])
           )
         ),
