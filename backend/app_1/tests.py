@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from app_1.models import Nutrition, Product, ProductNutrition, EatenRecord
+from app_1.models import Nutrition, Product, ProductNutrition, EatenRecord, Container, ContainerProduct
 
 class NutritionTestCase(TestCase):
     def setUp(self):
@@ -138,3 +138,81 @@ class EatenRecordTestCase(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(EatenRecord.objects.count(), 1)
+
+class ContainerTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_create_object(self):
+        data = {'name': 'test_container'}
+        url = reverse('containers-list')
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Container.objects.count(), 1)
+
+    def test_get_all_objects(self):
+        Container.objects.create(name='test_container_1')
+        Container.objects.create(name='test_container_2')
+        url = reverse('containers-list')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Container.objects.count(), 2)
+
+    def test_get_single_object(self):
+        object = Container.objects.create(name='test_container')
+        url = reverse('containers-detail', args=[object.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'test_container')
+
+    def test_update_object(self):
+        object = Container.objects.create(name='test_container')
+        updated_data = {'name': 'new_name'}
+        url = reverse('containers-detail', args=[object.id])
+        response = self.client.put(url, updated_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        object.refresh_from_db()
+        self.assertEqual(response.data['name'], 'new_name')
+
+    def test_delete_object(self):
+        object = Container.objects.create(name='test_container')
+        url = reverse('containers-detail', args=[object.id])
+        response = self.client.delete(url,format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(Container.DoesNotExist):
+            object.refresh_from_db()
+
+
+class ContainerProductTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.container = Container.objects.create(name='test_container')
+        self.product_1 = Product.objects.create(name='test_product_1')
+        self.product_2 = Product.objects.create(name='test_product_2')
+
+    def test_create_object(self):
+        data = [{'container':self.container.id, 'product': self.product_1.id, 'value': 100},{'container':self.container.id, 'product': self.product_2.id, 'value': 20}]
+        url = reverse('containers-products', args=[self.container.id])
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ContainerProduct.objects.count(), 2)
+
+    def test_create_object_error(self):
+        data = [{'container':self.container.id, 'product': self.product_1.id, 'value': 100},{'container':self.container.id, 'product': self.product_2.id, 'value': "pingwinek"}]
+        url = reverse('containers-products', args=[self.container.id])
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ContainerProduct.objects.count(), 0)
+
+    def test_update_object(self):
+        object_1 = ContainerProduct.objects.create(container=self.container, product=self.product_1, value=100)
+        object_2 = ContainerProduct.objects.create(container=self.container, product=self.product_2, value=200)
+        updated_data = [{'product': self.product_1.id, 'value': 100}, {'product': self.product_2.id, 'value': 180}]
+        url = reverse('containers-products', args=[self.container.id])
+        response = self.client.put(url, updated_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        object_1.refresh_from_db()
+        self.assertEqual(object_1.value, 100)
+        object_2.refresh_from_db()
+        self.assertEqual(object_2.value, 180)
+        self.assertEqual(ContainerProduct.objects.count(), 2)
