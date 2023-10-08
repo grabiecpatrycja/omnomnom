@@ -6,6 +6,7 @@ import 'package:calcounter/nutrition.dart';
 import 'package:calcounter/product/composeProduct.dart';
 import 'package:calcounter/product/model.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 
 class ProductState extends State<Products> {
@@ -38,10 +39,8 @@ class ProductState extends State<Products> {
                 return ListTile(title: Text(product.name));
               }),
           MaterialButton(child: const Text('Compose a new product'), onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return ComposeProduct(nutritions: snapshot.data[1]);
-            }));
-          },)
+            context.goNamed('composeProduct');
+          })
         ],
         );
       }

@@ -1,45 +1,49 @@
+import 'package:calcounter/http/nutrition.dart';
 import 'package:flutter/material.dart';
 
 import '../nutrition.dart';
 
 class ComposeProduct extends StatefulWidget {
-  final List<Nutrition> nutritions;
-
-  const ComposeProduct({super.key, required this.nutritions});
+  const ComposeProduct({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return ComposeProductState(nutritions: nutritions);
+    return ComposeProductState();
   }
 
 }
 
 
 class ComposeProductState extends State<ComposeProduct> {
-  final List<Nutrition> nutritions;
+  late Future<List<Nutrition>> nutritions;
   int index = 0;
 
-  ComposeProductState({required this.nutritions});
+  @override
+  void initState() {
+    super.initState();
+    nutritions = NutritionService.fetchNutritions();
+  }
 
   @override
   Widget build(BuildContext context) {
-    Material()
-    return Stepper(
-        currentStep: index,
-        onStepContinue: () {
-          setState(() {
-            index += 1;
-          });
-        },
-        steps: const <Step>[
-          Step(
-              title: Text('some1'),
-              content: Text('some1 content')
-          ),
-          Step(
-              title: Text('asdf'),
-              content: Text('asdf'))
-        ]);
+    return FutureBuilder(future: nutritions, builder: (context, snapshop) {
+      return Stepper(
+          currentStep: index,
+          onStepContinue: () {
+            setState(() {
+              index += 1;
+            });
+          },
+          steps: const <Step>[
+            Step(
+                title: Text('some1'),
+                content: Text('some1 content')
+            ),
+            Step(
+                title: Text('asdf'),
+                content: Text('asdf'))
+          ]);
+    });
   }
 
 }

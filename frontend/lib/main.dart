@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
+import 'package:calcounter/product/composeProduct.dart';
 import 'package:calcounter/product/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -103,32 +104,59 @@ class MyScaffold extends StatelessWidget {
 }
 
 Future<void> main() async {
+  final rootNagivatorKey = GlobalKey<NavigatorState>();
+  final shellNavigatorKey = GlobalKey<NavigatorState>();
+
   final router = GoRouter(
-    navigatorKey: GlobalKey(),
+    navigatorKey: rootNagivatorKey,
     initialLocation: '/',
-    routes: <RouteBase>[]
+    routes: <RouteBase>[
+      GoRoute(
+          name: 'main',
+          path: '/',
+          builder: (context, state) {
+            return DefaultTabController(
+                length: 2,
+                child: Scaffold(
+                    appBar: AppBar(
+                        bottom: TabBar(tabs: [
+                          Tab(icon: Icon(Icons.abc)),
+                          Tab(icon: Icon(Icons.ac_unit))
+                        ]),
+                        title: Text('Calories')
+                    ),
+                    body: TabBarView(children: [
+                      MyScaffold(),
+                      Products(),
+                    ])
+                )
+            );
+          }
+      ),
+      GoRoute(
+          name: 'composeProduct',
+          path: '/composeProduct',
+          builder: (context, state) {
+            return Scaffold(body: ComposeProduct());
+          })
+      // ShellRoute(
+      //   navigatorKey: shellNavigatorKey,
+      //   builder: (context, state, child) {
+      //
+      //   },
+      //   routes: <RouteBase>[
+      //     GoRoute(
+      //         path: '/',
+      //         builder: (context, state) {
+      //
+      //         })
+      //   ]
+      // )
+    ]
   );
   runApp(
-    MaterialApp(
+    MaterialApp.router(
+      routerConfig: router,
       title: 'My app', // used by the OS task switcher
-      home: SafeArea(
-        child: DefaultTabController(
-          length: 2,
-          child: Scaffold(
-            appBar: AppBar(
-              bottom: TabBar(tabs: [
-                Tab(icon: Icon(Icons.abc)),
-                Tab(icon: Icon(Icons.ac_unit))
-              ]),
-              title: Text('Calories')
-            ),
-            body: TabBarView(children: [
-              MyScaffold(),
-              Products(),
-            ])
-          )
-        ),
-      ),
-    ),
-  );
+    ));
 }
