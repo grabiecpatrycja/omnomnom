@@ -2,8 +2,8 @@ from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from app_1.models import Nutrition, Product, ProductNutrition
-from app_1.serializers import NutritionSerializer, ProductSerializer, ProductNutritionSerializer, EatenRecordSerializer
+from app_1.models import Nutrition, Product, ProductNutrition, Container, ContainerProduct
+from app_1.serializers import NutritionSerializer, ProductSerializer, ProductNutritionSerializer, EatenRecordSerializer, ContainerSerializer, ContainerProductSerialzier
 
 class NutritionViewSet(viewsets.ModelViewSet):
     queryset = Nutrition.objects.all()
@@ -36,4 +36,25 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = EatenRecordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(product=product)
+        return Response(status=status.HTTP_201_CREATED)
+    
+class ContainerViewSet(viewsets.ModelViewSet):
+    queryset = Container.objects.all()
+    serializer_class = ContainerSerializer
+
+    @action(detail=True, methods=['PUT'], serializer_class=ContainerProductSerialzier)
+    @transaction.atomic
+    def products(self, request, pk=None):
+        container = self.get_object()
+        data = request.data
+        for d in data:
+            product = d.get('product')
+            try:
+                container_product = ContainerProduct.objects.get(container=container, product=product)
+                serializer = ContainerProductSerialzier(container_product, data=d)
+            except ContainerProduct.DoesNotExist:
+                serializer = ContainerProductSerialzier(data=d)
+
+            serializer.is_valid(raise_exception=True)
+            serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
