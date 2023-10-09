@@ -191,28 +191,28 @@ class ContainerProductTestCase(TestCase):
         self.product_2 = Product.objects.create(name='test_product_2')
 
     def test_create_object(self):
-        data = [{'container':self.container.id, 'product': self.product_1.id, 'value': 100},{'container':self.container.id, 'product': self.product_2.id, 'value': 20}]
+        data = [{'container':self.container.id, 'product': self.product_1.id, 'mass': 100},{'container':self.container.id, 'product': self.product_2.id, 'mass': 20}]
         url = reverse('containers-products', args=[self.container.id])
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(ContainerProduct.objects.count(), 2)
 
     def test_create_object_error(self):
-        data = [{'container':self.container.id, 'product': self.product_1.id, 'value': 100},{'container':self.container.id, 'product': self.product_2.id, 'value': "pingwinek"}]
+        data = [{'container':self.container.id, 'product': self.product_1.id, 'mass': 100},{'container':self.container.id, 'product': self.product_2.id, 'mass': "pingwinek"}]
         url = reverse('containers-products', args=[self.container.id])
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(ContainerProduct.objects.count(), 0)
 
     def test_update_object(self):
-        object_1 = ContainerProduct.objects.create(container=self.container, product=self.product_1, value=100)
-        object_2 = ContainerProduct.objects.create(container=self.container, product=self.product_2, value=200)
-        updated_data = [{'product': self.product_1.id, 'value': 100}, {'product': self.product_2.id, 'value': 180}]
+        object_1 = ContainerProduct.objects.create(container=self.container, product=self.product_1, mass=100)
+        object_2 = ContainerProduct.objects.create(container=self.container, product=self.product_2, mass=200)
+        updated_data = [{'product': self.product_1.id, 'mass': 100}, {'product': self.product_2.id, 'mass': 180}]
         url = reverse('containers-products', args=[self.container.id])
         response = self.client.put(url, updated_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         object_1.refresh_from_db()
-        self.assertEqual(object_1.value, 100)
+        self.assertEqual(object_1.mass, 100)
         object_2.refresh_from_db()
-        self.assertEqual(object_2.value, 180)
+        self.assertEqual(object_2.mass, 180)
         self.assertEqual(ContainerProduct.objects.count(), 2)
