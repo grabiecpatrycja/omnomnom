@@ -1,5 +1,11 @@
+import 'dart:collection';
+import 'dart:convert';
+
 import 'package:calcounter/http/nutrition.dart';
+import 'package:calcounter/http/product.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:http/http.dart';
 
 import '../nutrition.dart';
 
@@ -16,6 +22,11 @@ class ComposeProduct extends StatefulWidget {
 
 class ComposeProductState extends State<ComposeProduct> {
   late Future<List<Nutrition>> nutritions;
+  final HashMap<String, double> values = HashMap();
+
+  final controller = TextEditingController();
+  late String newProductName;
+
   int index = 0;
 
   @override
@@ -26,23 +37,51 @@ class ComposeProductState extends State<ComposeProduct> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(future: nutritions, builder: (context, snapshop) {
-      return Stepper(
+    return FutureBuilder(future: nutritions, builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        TextEditingController tec = TextEditingController();
+        Step productNameInput = Step(
+            title: const Text('Name of the new product'),
+            content: TextField(controller: tec, onChanged: (String text) {
+              newProductName = tec.text;
+            })
+        );
+
+        List<Step> steps = snapshot.data!.map((Nutrition nutrition) {
+          return Step(
+            title: Text(nutrition.name),
+            content: TextField(
+                controller: controller, onChanged: (String text) {
+              double? value = double.tryParse(text);
+              if (value != null) {
+                values[nutrition.name] = value;
+              }
+            }),
+          );
+        }).toList();
+        steps.insert(0, productNameInput);
+
+        return Stepper(
           currentStep: index,
-          onStepContinue: () {
+          onStepContinue: () async {
+            if (index == steps.length - 1) {
+              Response response = await ProductService.addProduct(newProductName);
+              int productId = jsonDecode(response.body)['id'];
+              ProductService.addNutritionsToProduct(productId, values);
+              debugPrint(response.body);
+            }
             setState(() {
+              controller.clear();
               index += 1;
             });
           },
-          steps: const <Step>[
-            Step(
-                title: Text('some1'),
-                content: Text('some1 content')
-            ),
-            Step(
-                title: Text('asdf'),
-                content: Text('asdf'))
-          ]);
+          onStepCancel: () {
+            context.goNamed('main');
+          },
+          steps: steps,
+        );
+      }
+        return const Text('Loading...');
     });
   }
 
