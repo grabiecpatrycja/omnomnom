@@ -1,8 +1,11 @@
+from django.utils import timezone
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from app_1.models import Nutrition, Product, ProductNutrition, EatenRecord, Container, ContainerProduct
+from app_1.models import *
+from datetime import datetime
+import pytz
 
 class NutritionTestCase(TestCase):
     def setUp(self):
@@ -138,6 +141,18 @@ class EatenRecordTestCase(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(EatenRecord.objects.count(), 1)
+        eaten_record = EatenRecord.objects.latest('date')
+        self.assertLessEqual(eaten_record.date - timezone.now(), timezone.timedelta(seconds=1))
+    
+    def test_create_object_with_date(self):
+        custom_date = datetime(1989, 2, 24, 11, 30, tzinfo=pytz.utc)
+        data = {'product':self.product.id, 'mass': 100, 'date': custom_date.isoformat()}
+        url = reverse('products-eat', args=[self.product.id])
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(EatenRecord.objects.count(), 1)
+        eaten_record = EatenRecord.objects.latest('date')
+        self.assertEqual(eaten_record.date, custom_date)
 
 class ContainerTestCase(TestCase):
     def setUp(self):
@@ -216,3 +231,27 @@ class ContainerProductTestCase(TestCase):
         object_2.refresh_from_db()
         self.assertEqual(object_2.mass, 180)
         self.assertEqual(ContainerProduct.objects.count(), 2)
+
+class ContainerMassTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.container = Container.objects.create(name='test_container')
+
+    def test_create_object(self):
+        data = {'container':self.container.id, 'mass': 500}
+        url = reverse('containers-mass', args=[self.container.id])
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ContainerMass.objects.count(), 1)
+        container_mass = ContainerMass.objects.latest('date')
+        self.assertLessEqual(container_mass.date - timezone.now(), timezone.timedelta(seconds=1))
+
+    def test_create_object_with_date(self):
+        custom_date = datetime(1989, 2, 24, 11, 30, tzinfo=pytz.utc)
+        data = {'container':self.container.id, 'mass': 100, 'date': custom_date.isoformat()}
+        url = reverse('containers-mass', args=[self.container.id])
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ContainerMass.objects.count(), 1)
+        container_mass = ContainerMass.objects.latest('date')
+        self.assertEqual(container_mass.date, custom_date)

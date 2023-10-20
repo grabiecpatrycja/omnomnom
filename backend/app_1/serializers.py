@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from app_1.models import Nutrition, Product, ProductNutrition, EatenRecord, Container, ContainerProduct
+from app_1.models import *
 
 class NutritionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,4 +33,10 @@ class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = ContainerProduct
+        fields = '__all__'
+
+class ContainerMassSerializer(serializers.ModelSerializer):
+    container = serializers.PrimaryKeyRelatedField(read_only=True)
+    class Meta:
+        model = ContainerMass
         fields = '__all__'

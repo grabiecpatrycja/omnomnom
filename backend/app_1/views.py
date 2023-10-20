@@ -2,8 +2,8 @@ from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from app_1.models import Nutrition, Product, ProductNutrition, Container, ContainerProduct
-from app_1.serializers import NutritionSerializer, ProductSerializer, ProductNutritionSerializer, EatenRecordSerializer, ContainerSerializer, ContainerProductSerialzier
+from app_1.models import *
+from app_1.serializers import *
 
 class NutritionViewSet(viewsets.ModelViewSet):
     queryset = Nutrition.objects.all()
@@ -17,8 +17,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def nutritions(self, request, pk=None):
         product = self.get_object()
-        data = request.data
-        for d in data:
+        for d in request.data:
             nutrition = d.get('nutrition')
             try:
                 product_nutrition = ProductNutrition.objects.get(product=product, nutrition=nutrition)
@@ -46,8 +45,7 @@ class ContainerViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def products(self, request, pk=None):
         container = self.get_object()
-        data = request.data
-        for d in data:
+        for d in request.data:
             product = d.get('product')
             try:
                 container_product = ContainerProduct.objects.get(container=container, product=product)
@@ -57,4 +55,12 @@ class ContainerViewSet(viewsets.ModelViewSet):
 
             serializer.is_valid(raise_exception=True)
             serializer.save(container=container)
+        return Response(status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['POST'], serializer_class=ContainerMassSerializer)
+    def mass(self, request, pk=None):
+        container = self.get_object()
+        serializer = ContainerMassSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
