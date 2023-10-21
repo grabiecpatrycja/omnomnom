@@ -134,24 +134,18 @@ Future<void> main() async {
           }
       ),
       GoRoute(
+        name: 'products',
+        path: '/products',
+        builder: (context, state) {
+          return Products();
+        }
+      ),
+      GoRoute(
           name: 'composeProduct',
           path: '/composeProduct',
           builder: (context, state) {
             return Scaffold(body: ComposeProduct());
           })
-      // ShellRoute(
-      //   navigatorKey: shellNavigatorKey,
-      //   builder: (context, state, child) {
-      //
-      //   },
-      //   routes: <RouteBase>[
-      //     GoRoute(
-      //         path: '/',
-      //         builder: (context, state) {
-      //
-      //         })
-      //   ]
-      // )
     ]
   );
   runApp(
@@ -159,4 +153,45 @@ Future<void> main() async {
       routerConfig: router,
       title: 'My app', // used by the OS task switcher
     ));
+}
+
+class CustomNavigationBar extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return CustomNavigationState();
+  }
+  
+}
+
+class CustomNavigationState extends State<CustomNavigationBar> {
+  int pageIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('BottomNavigationBar Sample'),
+      ),
+      body: const Text('dupa'),
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          pageIndex = index;
+        },
+        indicatorColor: Colors.amber[800],
+        selectedIndex: pageIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.business),
+            label: 'Home',
+          ),
+        ]
+      ),
+    );
+  }
+  
 }

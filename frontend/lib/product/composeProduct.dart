@@ -22,7 +22,7 @@ class ComposeProduct extends StatefulWidget {
 
 class ComposeProductState extends State<ComposeProduct> {
   late Future<List<Nutrition>> nutritions;
-  final HashMap<String, double> values = HashMap();
+  final HashMap<int, double> values = HashMap();
 
   final controller = TextEditingController();
   late String newProductName;
@@ -54,7 +54,7 @@ class ComposeProductState extends State<ComposeProduct> {
                 controller: controller, onChanged: (String text) {
               double? value = double.tryParse(text);
               if (value != null) {
-                values[nutrition.name] = value;
+                values[nutrition.id] = value;
               }
             }),
           );
@@ -68,12 +68,14 @@ class ComposeProductState extends State<ComposeProduct> {
               Response response = await ProductService.addProduct(newProductName);
               int productId = jsonDecode(response.body)['id'];
               ProductService.addNutritionsToProduct(productId, values);
-              debugPrint(response.body);
+              context.goNamed('products');
             }
-            setState(() {
-              controller.clear();
-              index += 1;
-            });
+            else {
+              setState(() {
+                controller.clear();
+                index += 1;
+              });
+            }
           },
           onStepCancel: () {
             context.goNamed('main');
