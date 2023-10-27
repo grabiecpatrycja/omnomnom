@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:calcounter/container/main.dart';
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
 import 'package:calcounter/product/composeProduct.dart';
@@ -140,7 +141,14 @@ Future<void> main() async {
                 )
               ]
           ),
-
+        ]),
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+              path: '/containers',
+              builder: (context, state) {
+                return Containers();
+              }
+          )
         ]),
       ]),
     ]
@@ -182,6 +190,10 @@ class CustomNavigation extends StatelessWidget {
           ),
           NavigationDestination(
             icon: Icon(Icons.business),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.abc),
             label: 'Home',
           ),
         ]
