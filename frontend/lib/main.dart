@@ -2,20 +2,12 @@ import 'dart:convert';
 
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
+import 'package:calcounter/product/composeProduct.dart';
+import 'package:calcounter/product/detail.dart';
+import 'package:calcounter/product/main.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:go_router/go_router.dart';
 import 'nutrition.dart' as model;
-
-Future<List<model.Nutrition>> fetchNutritions() async {
-  final response = await http.get(Uri.parse('http://localhost:8000/api/nutritions'));
-  final data = jsonDecode(response.body);
-  List<model.Nutrition> nutritions = [];
-
-  for (final entry in data) {
-    nutritions.add(model.Nutrition(name: entry['name'], id: entry['id']));
-  }
-  return nutritions;
-}
 
 class NutritionsWidget extends StatefulWidget {
   const NutritionsWidget({super.key});
@@ -36,7 +28,7 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
   @override
   void initState() {
     super.initState();
-    nutritionsResponse = fetchNutritions();
+    nutritionsResponse = NutritionService.fetchNutritions();
   }
 
 
@@ -50,14 +42,8 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
         if (snapshot.hasData) {
           List<Widget> buttons = snapshot.data!.map((e) {
             Widget the_button = NutritionEntry(e.id, e.name, () => that.setState(() {
-              nutritionsResponse = fetchNutritions();
+              nutritionsResponse = NutritionService.fetchNutritions();
             }));
-            //     padding: EdgeInsets.all(4),
-            //     child: ElevatedButton(child: Text(e.name), onPressed: () {}, onHover: (s) {
-            //       debugPrint(this.toString());
-            //     })
-            // );this
-            // return Row(children: [the_button], mainAxisAlignment: MainAxisAlignment.center,);
             return the_button;
           }).toList();
 
@@ -79,7 +65,7 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
                           child: const Text('OK'),
                           onPressed: () {
                             NutritionService.addNutrition(textController.text).whenComplete(() => that.setState(() {
-                              nutritionsResponse = fetchNutritions();
+                              nutritionsResponse = NutritionService.fetchNutritions();
                             }));
                             Navigator.pop(context);
                           }
@@ -113,27 +99,94 @@ class MyScaffold extends StatelessWidget {
 }
 
 Future<void> main() async {
-  runApp(
-    MaterialApp(
-      title: 'My app', // used by the OS task switcher
-      home: SafeArea(
-        child: DefaultTabController(
-          length: 2,
-          child: Scaffold(
-            appBar: AppBar(
-              bottom: TabBar(tabs: [
-                Tab(icon: Icon(Icons.abc)),
-                Tab(icon: Icon(Icons.ac_unit))
-              ]),
-              title: Text('Calories')
-            ),
-            body: TabBarView(children: [
-              MyScaffold(),
-              const Text('heh'),
-            ])
-          )
-        ),
-      ),
-    ),
+  final rootNagivatorKey = GlobalKey<NavigatorState>();
+  final shellNavigatorKey = GlobalKey<NavigatorState>();
+
+  final router = GoRouter(
+    navigatorKey: rootNagivatorKey,
+    initialLocation: '/',
+    routes: <RouteBase>[
+      StatefulShellRoute.indexedStack(builder: (context, state, shell) {
+        return CustomNavigation(shell: shell);
+      }, branches: <StatefulShellBranch>[
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+            path: '/',
+            builder: (context, state) {
+              return NutritionsWidget();
+            }
+          ),
+        ]),
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+              path: '/products',
+              builder: (context, state) {
+                return Products();
+              },
+              routes: <RouteBase>[
+                GoRoute(
+                    name: 'composeProduct',
+                    path: 'compose',
+                    builder: (context, state) {
+                      return ComposeProduct();
+                    }
+                ),
+                GoRoute(
+                  name: 'productDetails',
+                  path: ':productId',
+                  builder: (context, state) {
+                    return ProductDetail(id: int.parse(state.pathParameters['productId']!));
+                  }
+                )
+              ]
+          ),
+
+        ]),
+      ]),
+    ]
   );
+  runApp(
+    MaterialApp.router(
+      routerConfig: router,
+      title: 'My app', // used by the OS task switcher
+    ));
+}
+
+
+class CustomNavigation extends StatelessWidget {
+  const CustomNavigation({
+    required StatefulNavigationShell this.shell,
+    super.key
+  });
+
+  final StatefulNavigationShell shell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('BottomNavigationBar Sample'),
+      ),
+      body: shell,
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (index) {
+          shell.goBranch(index);
+        },
+        indicatorColor: Colors.amber[800],
+        selectedIndex: shell.currentIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.business),
+            label: 'Home',
+          ),
+        ]
+      ),
+    );
+  }
+  
 }
