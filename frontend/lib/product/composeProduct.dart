@@ -78,7 +78,7 @@ class ComposeProductState extends State<ComposeProduct> {
             }
           },
           onStepCancel: () {
-            context.goNamed('main');
+            GoRouter.of(context).pop();
           },
           steps: steps,
         );

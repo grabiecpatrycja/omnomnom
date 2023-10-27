@@ -9,6 +9,11 @@ class ProductService {
     return await http.get(uri);
   }
 
+  static Future<http.Response> fetchProduct(int id) async {
+    Uri uri = Uri.parse("${conf.BACKEND_URL}/api/products/${id}");
+    return await http.get(uri);
+  }
+
   static Future<http.Response> addProduct(String name) async {
     Uri uri = Uri.parse("${conf.BACKEND_URL}/api/products/");
     return await http.post(uri, body: {'name': name});

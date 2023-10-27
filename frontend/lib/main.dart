@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
 import 'package:calcounter/product/composeProduct.dart';
+import 'package:calcounter/product/detail.dart';
 import 'package:calcounter/product/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -43,12 +44,6 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
             Widget the_button = NutritionEntry(e.id, e.name, () => that.setState(() {
               nutritionsResponse = NutritionService.fetchNutritions();
             }));
-            //     padding: EdgeInsets.all(4),
-            //     child: ElevatedButton(child: Text(e.name), onPressed: () {}, onHover: (s) {
-            //       debugPrint(this.toString());
-            //     })
-            // );this
-            // return Row(children: [the_button], mainAxisAlignment: MainAxisAlignment.center,);
             return the_button;
           }).toList();
 
@@ -111,41 +106,43 @@ Future<void> main() async {
     navigatorKey: rootNagivatorKey,
     initialLocation: '/',
     routes: <RouteBase>[
-      GoRoute(
-          name: 'main',
-          path: '/',
-          builder: (context, state) {
-            return DefaultTabController(
-                length: 2,
-                child: Scaffold(
-                    appBar: AppBar(
-                        bottom: TabBar(tabs: [
-                          Tab(icon: Icon(Icons.abc)),
-                          Tab(icon: Icon(Icons.ac_unit))
-                        ]),
-                        title: Text('Calories')
-                    ),
-                    body: TabBarView(children: [
-                      MyScaffold(),
-                      Products(),
-                    ])
+      StatefulShellRoute.indexedStack(builder: (context, state, shell) {
+        return CustomNavigation(shell: shell);
+      }, branches: <StatefulShellBranch>[
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+            path: '/',
+            builder: (context, state) {
+              return NutritionsWidget();
+            }
+          ),
+        ]),
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+              path: '/products',
+              builder: (context, state) {
+                return Products();
+              },
+              routes: <RouteBase>[
+                GoRoute(
+                    name: 'composeProduct',
+                    path: 'compose',
+                    builder: (context, state) {
+                      return ComposeProduct();
+                    }
+                ),
+                GoRoute(
+                  name: 'productDetails',
+                  path: ':productId',
+                  builder: (context, state) {
+                    return ProductDetail(id: int.parse(state.pathParameters['productId']!));
+                  }
                 )
-            );
-          }
-      ),
-      GoRoute(
-        name: 'products',
-        path: '/products',
-        builder: (context, state) {
-          return Products();
-        }
-      ),
-      GoRoute(
-          name: 'composeProduct',
-          path: '/composeProduct',
-          builder: (context, state) {
-            return Scaffold(body: ComposeProduct());
-          })
+              ]
+          ),
+
+        ]),
+      ]),
     ]
   );
   runApp(
@@ -155,16 +152,14 @@ Future<void> main() async {
     ));
 }
 
-class CustomNavigationBar extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return CustomNavigationState();
-  }
-  
-}
 
-class CustomNavigationState extends State<CustomNavigationBar> {
-  int pageIndex = 0;
+class CustomNavigation extends StatelessWidget {
+  const CustomNavigation({
+    required StatefulNavigationShell this.shell,
+    super.key
+  });
+
+  final StatefulNavigationShell shell;
 
   @override
   Widget build(BuildContext context) {
@@ -172,13 +167,13 @@ class CustomNavigationState extends State<CustomNavigationBar> {
       appBar: AppBar(
         title: const Text('BottomNavigationBar Sample'),
       ),
-      body: const Text('dupa'),
+      body: shell,
       bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          pageIndex = index;
+        onDestinationSelected: (index) {
+          shell.goBranch(index);
         },
         indicatorColor: Colors.amber[800],
-        selectedIndex: pageIndex,
+        selectedIndex: shell.currentIndex,
         destinations: const <Widget>[
           NavigationDestination(
             selectedIcon: Icon(Icons.home),

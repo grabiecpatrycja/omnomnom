@@ -9,6 +9,24 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 
+
+class ProductLink extends StatelessWidget {
+  final int id;
+  final String name;
+  const ProductLink({required this.id, required this.name, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(name),
+      onTap: () {
+        GoRouter.of(context).push("/products/${id}");
+      },
+    );
+  }
+}
+
+
 class ProductState extends State<Products> {
   late Future<http.Response> productsResponse;
   late Future<List<Nutrition>> nutritionsResponse;
@@ -36,10 +54,10 @@ class ProductState extends State<Products> {
               itemCount: data.length,
               itemBuilder: (context, index) {
                 Product product = data[index];
-                return ListTile(title: Text(product.name));
+                return ProductLink(id: product.id, name: product.name);
               }),
           MaterialButton(child: const Text('Compose a new product'), onPressed: () {
-            context.goNamed('composeProduct');
+            GoRouter.of(context).goNamed('composeProduct');
           })
         ],
         );
