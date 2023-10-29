@@ -67,8 +67,10 @@ class ComposeProductState extends State<ComposeProduct> {
             if (index == steps.length - 1) {
               Response response = await ProductService.addProduct(newProductName);
               int productId = jsonDecode(response.body)['id'];
-              ProductService.addNutritionsToProduct(productId, values);
-              context.goNamed('products');
+              ProductService.addNutritionsToProduct(productId, values).then((value)
+              {
+                GoRouter.of(context).go('/products');
+              });
             }
             else {
               setState(() {
