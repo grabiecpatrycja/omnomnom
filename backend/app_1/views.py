@@ -10,7 +10,7 @@ class NutritionViewSet(viewsets.ModelViewSet):
     serializer_class = NutritionSerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.prefetch_related('nutrition_entries__nutrition')
     serializer_class = ProductSerializer
 
     @action(detail=True, methods=['PUT'], serializer_class=ProductNutritionSerializer)
