@@ -8,9 +8,10 @@ class NutritionSerializer(serializers.ModelSerializer):
 
 class ProductNutritionSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(read_only=True)
+    nutrition_name = serializers.StringRelatedField(source='nutrition.name',read_only=True)
     class Meta:
         model = ProductNutrition
-        fields = '__all__'
+        fields = ['product', 'nutrition', 'nutrition_name', 'value']
 
 class ProductSerializer(serializers.ModelSerializer):
     nutrition_entries = ProductNutritionSerializer(many=True, read_only=True)
