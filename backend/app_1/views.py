@@ -1,7 +1,9 @@
 from django.db import transaction
+from django.db.models import Subquery, OuterRef, F
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from app_1.models import *
 from app_1.serializers import *
 
@@ -64,3 +66,43 @@ class ContainerViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
+
+
+#Próbuję robić rzeczy
+
+# def mass_left(container):
+#     first_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container')).order_by('date').values('mass')[:1])
+#     mass_left = ContainerMass.objects.filter(container=container).order_by('-date').annotate(mass_left=first_mass-F('mass'))[:1]
+#     return mass_left
+
+# def eaten_today(container):
+#     previous_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__lt=OuterRef('date')).order_by('-date').values('mass')[:1])
+#     eaten_mass = ContainerMass.objects.filter(container=container).order_by('-date').annotate(eaten_today=previous_mass-F('mass'))
+#     return eaten_mass 
+
+# class log(APIView):
+
+#     def get(self, request):
+#         masses = eaten_today(2)
+#         mass = [mass.eaten_today for mass in masses]
+#         return Response(mass)
+
+
+
+
+class log(APIView):
+
+    def get(self, request):
+        # robię to dla każdnego pojemnika w pętli?
+        container = Container.objects.get(id=2)
+        # obliczanie ilości zjedzonej danego dnia
+        previous_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__lt=OuterRef('date')).order_by('-date').values('mass')[:1])
+        eaten_mass = ContainerMass.objects.filter(container=container).order_by('-date').annotate(eaten_today=previous_mass-F('mass'))
+        # znajdowanie z jakich produktów składa się container
+        products = ContainerProduct.objects.filter(container=container)
+        product_values = [product.value for product in products] # może by tu zrobić słownik
+
+
+        product_list = [product.product.id for product in products]    
+        masses = [mass.eaten_today for mass in eaten_mass]
+        return Response(product_list)
