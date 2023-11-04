@@ -52,10 +52,10 @@ class ComposeProductState extends State<ComposeProduct> {
             title: Text(nutrition.name),
             content: TextField(
                 controller: controller, onChanged: (String text) {
-              double? value = double.tryParse(text);
-              if (value != null) {
-                values[nutrition.id] = value;
-              }
+                  double? value = double.tryParse(text);
+                  if (value != null) {
+                    values[nutrition.id] = value;
+                  }
             }),
           );
         }).toList();
@@ -81,6 +81,11 @@ class ComposeProductState extends State<ComposeProduct> {
           },
           onStepCancel: () {
             GoRouter.of(context).pop();
+          },
+          onStepTapped: (int stepIndex) {
+            setState(() {
+              index = stepIndex;
+            });
           },
           steps: steps,
         );

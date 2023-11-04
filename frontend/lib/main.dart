@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:calcounter/container/detail.dart';
 import 'package:calcounter/container/main.dart';
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
@@ -146,8 +147,17 @@ Future<void> main() async {
           GoRoute(
               path: '/containers',
               builder: (context, state) {
-                return Containers();
-              }
+                return OContainers();
+              },
+              routes: <RouteBase>[
+                GoRoute(
+                    name: 'containerDetail',
+                    path: ':containerId',
+                    builder: (context, state) {
+                      return ContainerDetail();
+                    }
+                )
+              ]
           )
         ]),
       ]),
