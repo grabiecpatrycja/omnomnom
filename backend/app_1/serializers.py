@@ -25,15 +25,17 @@ class EatenRecordSerializer(serializers.ModelSerializer):
         model = EatenRecord
         fields = '__all__'
 
-class ContainerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Container
-        fields = '__all__'
-
 class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)
+    product_name = serializers.StringRelatedField(source='product.name', read_only=True)
     class Meta:
         model = ContainerProduct
+        fields = ['container', 'product', 'product_name', 'mass']
+
+class ContainerSerializer(serializers.ModelSerializer):
+    product_entries = ContainerProductSerialzier(many=True, read_only=True)
+    class Meta:
+        model = Container
         fields = '__all__'
 
 class ContainerMassSerializer(serializers.ModelSerializer):
