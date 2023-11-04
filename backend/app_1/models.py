@@ -39,7 +39,7 @@ class Container(models.Model):
         return self.name
     
 class ContainerProduct(models.Model):
-    container = models.ForeignKey(Container, on_delete=models.CASCADE)
+    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='product_entries')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     mass = models.FloatField()
 

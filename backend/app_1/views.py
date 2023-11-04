@@ -38,7 +38,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_201_CREATED)
     
 class ContainerViewSet(viewsets.ModelViewSet):
-    queryset = Container.objects.all()
+    queryset = Container.objects.prefetch_related('product_entries__product')
     serializer_class = ContainerSerializer
 
     @action(detail=True, methods=['PUT'], serializer_class=ContainerProductSerialzier)
