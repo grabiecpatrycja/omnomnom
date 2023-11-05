@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../product/model.dart';
 import 'conf.dart' as conf;
 
 class ProductService {
@@ -10,9 +11,9 @@ class ProductService {
     return await http.get(uri);
   }
 
-  static Future<http.Response> fetchProduct(int id) async {
+  static Future<Product> fetchProduct(int id) async {
     Uri uri = Uri.parse("${conf.BACKEND_URL}/api/products/${id}");
-    return await http.get(uri);
+    return Product.fromMap(jsonDecode(utf8.decode((await http.get(uri)).bodyBytes)));
   }
 
   static Future<http.Response> addProduct(String name) async {

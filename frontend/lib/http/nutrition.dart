@@ -19,7 +19,8 @@ class NutritionService {
   }
 
   static Future<List<Nutrition>> fetchNutritions() async {
-    final response = await http.get(Uri.parse('http://localhost:8000/api/nutritions'));
+    Uri url = Uri.parse("${conf.BACKEND_URL}/api/nutritions/");
+    final response = await http.get(url);
     final data = jsonDecode(response.body);
     List<Nutrition> nutritions = [];
 

@@ -1,1 +1,1 @@
-final BACKEND_URL = 'http://localhost:8000';
+final BACKEND_URL = 'http://192.168.42.70:8000';
