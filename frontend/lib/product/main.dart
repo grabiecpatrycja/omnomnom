@@ -59,7 +59,7 @@ class ProductState extends State<Products> {
                 return ProductLink(id: product.id, name: product.name);
               })),
           MaterialButton(child: const Text('Compose a new product'), onPressed: () {
-            GoRouter.of(context).goNamed('composeProduct');
+            GoRouter.of(context).pushNamed('composeProduct');
           })
         ],
         );

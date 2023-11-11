@@ -102,7 +102,8 @@ class MyScaffold extends StatelessWidget {
 
 Future<void> main() async {
   final rootNagivatorKey = GlobalKey<NavigatorState>();
-  final shellNavigatorKey = GlobalKey<NavigatorState>();
+  final productsNavigatorKey = GlobalKey<NavigatorState>();
+  final containersNavigatorKey = GlobalKey<NavigatorState>();
 
   final router = GoRouter(
     navigatorKey: rootNagivatorKey,
@@ -119,7 +120,9 @@ Future<void> main() async {
             }
           ),
         ]),
-        StatefulShellBranch(routes: <RouteBase>[
+        StatefulShellBranch(
+            navigatorKey: productsNavigatorKey,
+            routes: <RouteBase>[
           GoRoute(
               path: '/products',
               builder: (context, state) {
@@ -143,7 +146,9 @@ Future<void> main() async {
               ]
           ),
         ]),
-        StatefulShellBranch(routes: <RouteBase>[
+        StatefulShellBranch(
+            navigatorKey: containersNavigatorKey,
+            routes: <RouteBase>[
           GoRoute(
               path: '/containers',
               builder: (context, state) {
@@ -154,7 +159,7 @@ Future<void> main() async {
                     name: 'containerDetail',
                     path: ':containerId',
                     builder: (context, state) {
-                      return ContainerDetail();
+                      return ContainerDetailWidget(id: int.parse(state.pathParameters['containerId']!));
                     }
                 )
               ]
@@ -182,13 +187,11 @@ class CustomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('BottomNavigationBar Sample'),
-      ),
       body: shell,
+      appBar: AppBar(),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (index) {
-          shell.goBranch(index);
+          shell.goBranch(index, initialLocation: index == shell.currentIndex);
         },
         indicatorColor: Colors.amber[800],
         selectedIndex: shell.currentIndex,

@@ -67,7 +67,13 @@ class OContainers extends StatefulWidget {
 }
 
 class OContainersState extends State<OContainers> {
-  final fetchContainers = ContainerService.fetchContainers();
+  late Future<List<OContainer>> fetchContainers;
+
+  @override
+  void initState(){
+    super.initState();
+    fetchContainers = ContainerService.fetchContainers();
+  }
 
   @override
   Widget build(BuildContext context) {
