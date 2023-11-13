@@ -93,16 +93,11 @@ class ContainerViewSet(viewsets.ModelViewSet):
 class log(APIView):
 
     def get(self, request):
-        # robię to dla każdnego pojemnika w pętli?
-        container = Container.objects.get(id=2)
-        # obliczanie ilości zjedzonej danego dnia
-        previous_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__lt=OuterRef('date')).order_by('-date').values('mass')[:1])
-        eaten_mass = ContainerMass.objects.filter(container=container).order_by('-date').annotate(eaten_today=previous_mass-F('mass'))
-        # znajdowanie z jakich produktów składa się container
-        products = ContainerProduct.objects.filter(container=container)
-        product_values = [product.value for product in products] # może by tu zrobić słownik
+        
+        dupa = ProductNutrition.objects.filter(nutrition__id=1)
 
+        # previous_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__lt=OuterRef('date')).order_by('-date').values('mass')[:1])
+        # eaten_mass = ContainerMass.objects.filter(container=container).order_by('-date').annotate(eaten_today=previous_mass-F('mass'))
 
-        product_list = [product.product.id for product in products]    
-        masses = [mass.eaten_today for mass in eaten_mass]
-        return Response(product_list)
+        
+        
