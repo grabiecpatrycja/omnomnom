@@ -57,10 +57,16 @@ class ContainerViewSet(viewsets.ModelViewSet):
             serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
     
-    @action(detail=True, methods=['POST'], serializer_class=ContainerMassSerializer)
+    @action(detail=True, methods=['GET','POST'], serializer_class=ContainerMassSerializer)
     def mass(self, request, pk=None):
         container = self.get_object()
-        serializer = ContainerMassSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(container=container)
-        return Response(status=status.HTTP_201_CREATED)
+        if request.method == 'GET':
+            container_mass = ContainerMass.objects.filter(container=container)
+            serializer = ContainerMassSerializer(container_mass, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        if request.method == 'POST':
+            serializer = ContainerMassSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(container=container)
+            return Response(status=status.HTTP_201_CREATED)
