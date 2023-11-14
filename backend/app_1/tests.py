@@ -255,3 +255,19 @@ class ContainerMassTestCase(TestCase):
         self.assertEqual(ContainerMass.objects.count(), 1)
         container_mass = ContainerMass.objects.latest('date')
         self.assertEqual(container_mass.date, custom_date)
+
+class logTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_count(self):
+        nutrition = Nutrition.objects.create(name='kcal')
+        product = Product.objects.create(name='peanut butter')
+        product_nutrition = ProductNutrition.objects.create(product=product, nutrition=nutrition, value=100)
+        container = Container.objects.create(name='jar')
+        container_product = ContainerProduct.objects.create(container=container, product=product, mass=500)
+        container_mass = ContainerMass.objects.create(container=container, mass=450)
+        url = reverse('log')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [450])

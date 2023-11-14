@@ -8,7 +8,7 @@ router.register(r'products', ProductViewSet, basename="products")
 router.register(r'containers', ContainerViewSet, basename="containers")
 
 urlpatterns = [
-    path('log', log.as_view() )
+    path('log', log.as_view(),name='log' )
 ]
 
 urlpatterns += router.urls

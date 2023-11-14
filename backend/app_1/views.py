@@ -67,37 +67,14 @@ class ContainerViewSet(viewsets.ModelViewSet):
         serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
 
-
-#Próbuję robić rzeczy
-
-# def mass_left(container):
-#     first_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container')).order_by('date').values('mass')[:1])
-#     mass_left = ContainerMass.objects.filter(container=container).order_by('-date').annotate(mass_left=first_mass-F('mass'))[:1]
-#     return mass_left
-
-# def eaten_today(container):
-#     previous_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__lt=OuterRef('date')).order_by('-date').values('mass')[:1])
-#     eaten_mass = ContainerMass.objects.filter(container=container).order_by('-date').annotate(eaten_today=previous_mass-F('mass'))
-#     return eaten_mass 
-
-# class log(APIView):
-
-#     def get(self, request):
-#         masses = eaten_today(2)
-#         mass = [mass.eaten_today for mass in masses]
-#         return Response(mass)
-
-
-
-
 class log(APIView):
 
     def get(self, request):
-        
-        dupa = ProductNutrition.objects.filter(nutrition__id=1)
 
-        # previous_mass = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__lt=OuterRef('date')).order_by('-date').values('mass')[:1])
-        # eaten_mass = ContainerMass.objects.filter(container=container).order_by('-date').annotate(eaten_today=previous_mass-F('mass'))
-
+        eaten_mass = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id')).values('mass')[:1])
+        masses = Nutrition.objects.annotate(mass=eaten_mass)
+        mass = [mass.mass for mass in masses]
+        return Response(mass)
         
+             
         
