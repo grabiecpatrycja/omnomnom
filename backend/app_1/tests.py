@@ -237,6 +237,14 @@ class ContainerMassTestCase(TestCase):
         self.client = APIClient()
         self.container = Container.objects.create(name='test_container')
 
+    def test_get_objects(self):
+        ContainerMass.objects.create(container=self.container, mass=500)
+        ContainerMass.objects.create(container=self.container, mass=400)
+        url = reverse('containers-mass', args=[self.container.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ContainerMass.objects.count(), 2)        
+
     def test_create_object(self):
         data = {'container':self.container.id, 'mass': 500}
         url = reverse('containers-mass', args=[self.container.id])
