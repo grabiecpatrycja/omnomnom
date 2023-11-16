@@ -18,8 +18,6 @@ class Product {
       for (final e in data) {
         Map entry = e as Map;
         nutrients[entry['nutrition_name'] as String] = entry['value'];
-        debugPrint(entry['nutrition_name']);
-        debugPrint(entry['value'].toString());
       }
 
       this.nutrients = nutrients;

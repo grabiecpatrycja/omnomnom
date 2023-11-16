@@ -20,4 +20,18 @@ class ContainerService {
     final response = await http.get(url);
     return OContainer.fromMap(jsonDecode(utf8.decode(response.bodyBytes)));
   }
+
+  static Future<http.Response> putProducts(int id, List<Map<String, num?>> payload) async {
+    Uri url = Uri.parse("${conf.BACKEND_URL}/api/containers/${id}/products/");
+    print(payload);
+    final response = await http.put(
+        url,
+        body: jsonEncode(payload),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+    );
+    print(response.body);
+    return response;
+  }
 }
