@@ -71,10 +71,13 @@ class log(APIView):
 
     def get(self, request):
 
-        eaten_mass = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id')).values('mass')[:1])
-        masses = Nutrition.objects.annotate(mass=eaten_mass)
-        mass = [mass.mass for mass in masses]
+        last_mass = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id')).order_by('-date').values('mass')[:1])
+        next_to_last_mass = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id')).order_by('-date').values('mass')[1:2])
+        container = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries=OuterRef('product')).values('container')[:1])
+        value = Subquery(ProductNutrition.objects.filter(nutrition=OuterRef('id'),).values('value')[:1])
+        masses = Nutrition.objects.annotate(eaten_mass=next_to_last_mass-last_mass, value=value)
+        mass = [mass.value for mass in masses]
         return Response(mass)
         
-             
+            #   product__containers__container=container
         
