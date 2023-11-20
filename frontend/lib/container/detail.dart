@@ -198,6 +198,9 @@ class ContainerInsidesState extends State<ContainerInsidesWidget> {
                 onPressed: () {},
                 child: const Text('Edit'),
               ),
+              IconButton(onPressed: (){
+                GoRouter.of(context).goNamed('containerHistory', pathParameters: {'containerId': id.toString()});
+              }, icon: Icon(Icons.area_chart))
             ])
       ]);
     });

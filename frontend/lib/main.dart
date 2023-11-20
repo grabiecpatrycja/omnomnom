@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:calcounter/container/detail.dart';
+import 'package:calcounter/container/history/widgets.dart';
 import 'package:calcounter/container/main.dart';
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
@@ -161,6 +162,13 @@ Future<void> main() async {
                     builder: (context, state) {
                       return ContainerDetailWidget(id: int.parse(state.pathParameters['containerId']!));
                     }
+                ),
+                GoRoute(
+                  name: 'containerHistory',
+                  path: ':containerId/history',
+                  builder: (context, state) {
+                    return ContainerHistoryPage(containerId: int.parse(state.pathParameters['containerId']!));
+                  }
                 )
               ]
           )
