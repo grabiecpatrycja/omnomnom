@@ -1,5 +1,6 @@
+from django.utils import timezone
 from django.db import transaction
-from django.db.models import Subquery, OuterRef, F
+from django.db.models import Subquery, OuterRef, F, Sum
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -70,14 +71,24 @@ class ContainerViewSet(viewsets.ModelViewSet):
 class log(APIView):
 
     def get(self, request):
+        date_1 = timezone.now().date()
+        date_2 = date_1 - timezone.timedelta(days=1)
 
-        last_mass = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id')).order_by('-date').values('mass')[:1])
-        next_to_last_mass = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id')).order_by('-date').values('mass')[1:2])
-        container = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries=OuterRef('product')).values('container')[:1])
-        value = Subquery(ProductNutrition.objects.filter(nutrition=OuterRef('id'),).values('value')[:1])
-        masses = Nutrition.objects.annotate(eaten_mass=next_to_last_mass-last_mass, value=value)
-        mass = [mass.value for mass in masses]
-        return Response(mass)
+        # mass_1 = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id'), date__date=date_1).order_by('-date').values('mass')[:1])
+        # mass_2 = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__nutrition__id=OuterRef('id'), date__date=date_2).order_by('-date').values('mass')[:1])
+        # product = Subquery(ContainerProduct.objects.filter(product__nutrition_entries__product=OuterRef('product')).values('product')[:1])
+        # value = Subquery(ProductNutrition.objects.filter(nutrition=OuterRef('id'), product=product).values('value')[:1])
+        # masses = Nutrition.objects.annotate(eaten=((mass_2-mass_1)*value)/100)
+
+        
+        mass_1 = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__product=OuterRef('product'), date__date=date_1).order_by('-date').values('mass')[:1])
+        mass_2 = Subquery(ContainerMass.objects.filter(container__product_entries__product__nutrition_entries__product=OuterRef('product'), date__date=date_2).order_by('-date').values('mass')[:1])
+        eaten_nutrition = ProductNutrition.objects.annotate(eaten=((mass_2-mass_1)*F('value')/100))
+        sum = eaten_nutrition.values('nutrition').annotate(sum=Sum('eaten')).order_by()
+        
+        nutrition = [nutrition.eaten for nutrition in eaten_nutrition]
+        return Response(sum)
         
             #   product__containers__container=container
+
         
