@@ -19,11 +19,9 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
-class EatenRecordSerializer(serializers.ModelSerializer):
-    product = serializers.PrimaryKeyRelatedField(read_only=True)
-    class Meta:
-        model = EatenRecord
-        fields = '__all__'
+class EatenRecordSerializer(serializers.Serializer):
+    # product = serializers.()
+    mass = serializers.FloatField()
 
 class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)
