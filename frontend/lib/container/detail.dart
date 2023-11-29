@@ -209,6 +209,12 @@ class ContainerInsidesState extends State<ContainerInsidesWidget> {
 
 class ContainerCheckinWidget extends StatelessWidget {
     final TextEditingController controller = TextEditingController();
+    final int id;
+
+    ContainerCheckinWidget({
+      required this.id,
+      super.key,
+    });
 
     @override
     Widget build(BuildContext context) {
@@ -224,8 +230,9 @@ class ContainerCheckinWidget extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                debugPrint(controller.text);
+              onPressed: () async {
+                await ContainerService.weightContainer(id, double.parse(controller.text));
+                GoRouter.of(context).pop();
               },
               child: const Text('OK'),
             ),
@@ -254,7 +261,7 @@ class ContainerDetailWidget extends StatelessWidget {
 
   Widget build(BuildContext context) {
     return Column(children: [
-      ContainerCheckinWidget(),
+      ContainerCheckinWidget(id: id),
       MaterialButton(onPressed: () {
         GoRouter.of(context).pop();
       }, child: const Text('Back')),

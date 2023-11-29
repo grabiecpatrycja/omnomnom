@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:intl/intl.dart';
+
 import '../container/models.dart';
 import 'package:http/http.dart' as http;
 import 'conf.dart' as conf;
@@ -29,6 +31,21 @@ class ContainerService {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
+    );
+    return response;
+  }
+
+  static Future<http.Response> weightContainer(int id, num mass) async {
+    Uri url = Uri.parse("${conf.BACKEND_URL}/api/containers/${id}/mass/");
+    final response = await http.post(
+      url,
+      body: jsonEncode({
+        'mass': mass,
+        'date': DateFormat("yyyy-MM-ddTHH:mm").format(DateTime.now()),
+      }),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
     );
     return response;
   }
