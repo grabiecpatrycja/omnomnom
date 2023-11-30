@@ -43,6 +43,7 @@ dependencies:
   bloc: ^8.0.0
   flutter_bloc: ^8.0.0
   intl: ^0.18.1
+  syncfusion_flutter_datagrid: ^23.2.6
 
 dev_dependencies:
   flutter_test:
