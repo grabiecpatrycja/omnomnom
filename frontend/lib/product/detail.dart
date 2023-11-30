@@ -1,13 +1,8 @@
-import 'dart:collection';
-import 'dart:convert';
-
-import 'package:calcounter/http/nutrition.dart';
 import 'package:calcounter/nutrition.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:http/http.dart';
 
 import '../http/product.dart';
+import 'model.dart';
 
 String findNutrition(List<Nutrition> nutritions, int id) {
   for (final nutrition in nutritions) {
@@ -18,34 +13,46 @@ String findNutrition(List<Nutrition> nutritions, int id) {
   return '';
 }
 
-
-
-class ProductDetail extends StatelessWidget {
+class ProductDetail extends StatefulWidget {
   final int id;
   const ProductDetail({required this.id, super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(future: Future.wait([
-      ProductService.fetchProduct(id),
-      NutritionService.fetchNutritions(),
-    ]),builder: (context, snapshot){
-      if (snapshot.hasData) {
-        final HashMap<String, dynamic> data = jsonDecode((snapshot.data![0] as Response).body);
-        final List<Nutrition> nutritions = snapshot.data![1] as List<Nutrition>;
+  State<StatefulWidget> createState() {
+    return ProductDetailState(id: id);
+  }
+}
 
-        (data['nutrition_entries'] as List).map((e) {
-          final HashMap nutrition_entry = e as HashMap;
-        });
-        return Table(
-          border: TableBorder.all(),
-          columnWidths: const <int, TableColumnWidth>{},
-          children: []
-        );
+
+class ProductDetailState extends State<ProductDetail> {
+  final int id;
+  late Future<Product> fetchProduct;
+  ProductDetailState({required this.id}) : fetchProduct = ProductService.fetchProduct(id);
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProduct = ProductService.fetchProduct(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(future: fetchProduct,builder: (context, snapshot){
+      if (snapshot.hasData) {
+        final product = snapshot.data!;
+        return DataTable(columns: const <DataColumn>[
+          DataColumn(label: Expanded(child: Text('Name'))),
+          DataColumn(label: Expanded(child: Text('Value'))),
+        ], rows: product.nutrients!.entries.map((e) {
+          return DataRow(cells: <DataCell>[
+            DataCell(Text(e.key)),
+            DataCell(Text(e.value.toString())),
+          ]);
+        }).toList());
       }
-      else {
-        return const Text('Loading...');
-      }
+
+      return const Text('Nie pobrano');
+
     });
   }
 }

@@ -50,14 +50,16 @@ class ProductState extends State<Products> {
             .toList();
 
         return Column(children: [
-          ListView.builder(shrinkWrap: true,
+          Expanded(child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
               itemCount: data.length,
               itemBuilder: (context, index) {
                 Product product = data[index];
                 return ProductLink(id: product.id, name: product.name);
-              }),
+              })),
           MaterialButton(child: const Text('Compose a new product'), onPressed: () {
-            GoRouter.of(context).goNamed('composeProduct');
+            GoRouter.of(context).pushNamed('composeProduct');
           })
         ],
         );

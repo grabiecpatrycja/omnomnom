@@ -52,10 +52,10 @@ class ComposeProductState extends State<ComposeProduct> {
             title: Text(nutrition.name),
             content: TextField(
                 controller: controller, onChanged: (String text) {
-              double? value = double.tryParse(text);
-              if (value != null) {
-                values[nutrition.id] = value;
-              }
+                  double? value = double.tryParse(text);
+                  if (value != null) {
+                    values[nutrition.id] = value;
+                  }
             }),
           );
         }).toList();
@@ -67,8 +67,10 @@ class ComposeProductState extends State<ComposeProduct> {
             if (index == steps.length - 1) {
               Response response = await ProductService.addProduct(newProductName);
               int productId = jsonDecode(response.body)['id'];
-              ProductService.addNutritionsToProduct(productId, values);
-              context.goNamed('products');
+              ProductService.addNutritionsToProduct(productId, values).then((value)
+              {
+                GoRouter.of(context).go('/products');
+              });
             }
             else {
               setState(() {
@@ -79,6 +81,11 @@ class ComposeProductState extends State<ComposeProduct> {
           },
           onStepCancel: () {
             GoRouter.of(context).pop();
+          },
+          onStepTapped: (int stepIndex) {
+            setState(() {
+              index = stepIndex;
+            });
           },
           steps: steps,
         );
