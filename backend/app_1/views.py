@@ -1,6 +1,6 @@
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Subquery, OuterRef, F, Sum
+from django.db.models import Subquery, OuterRef, F, Sum, Exists
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -71,14 +71,19 @@ class ContainerViewSet(viewsets.ModelViewSet):
 class log(APIView):
 
     def get(self, request):
+        breakpoint()
+        containers_id = request.GET.getlist['containers']
+        containers = Container.objects.filter(id__in=containers_id)
         date_1 = timezone.now().date()
 
-        mass_1 = Subquery(ContainerMass.objects.filter(container__product_entries__container=OuterRef('product'), date__date=date_1).order_by('-date').values('mass')[:1])
-        mass_2 = Subquery(ContainerMass.objects.filter(container__product_entries__product=OuterRef('product'), date__date__lt=date_1).order_by('-date').values('mass')[:1])
-        sum_container = ContainerProduct.objects.values('container').annotate(sum=Sum('mass'))
-        masses = ContainerProduct.objects.annotate(eaten_mass=(mass_2-mass_1)*F('mass')/Subquery(sum_container.filter(container=F('container')).values('sum')[:1]))
-        eaten_nutritions = ProductNutrition.objects.annotate(eaten=Subquery(masses.filter(product=F('product')).values('eaten_mass')[:1])*F('value')/100)
+        mass_1 = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__date=date_1).order_by('-date').values('mass'))[:1][0]['mass']
+        mass_2 = Subquery(ContainerMass.objects.filter(container=OuterRef('container'), date__date__lt=date_1).order_by('-date').values('mass'))[:1][0]['mass']
+        initial_mass = ContainerProduct.objects.filter(container=container).aggregate(initial_mass=Sum('mass'))['initial_mass']
+        masses = ContainerProduct.objects.filter(container=container, product=OuterRef('product')).annotate(eaten_mass=(mass_2-mass_1)*F('mass')/initial_mass)
+        eaten_nutritions = ProductNutrition.objects.filter(
+            Exists(ContainerProduct.objects.filter(product=OuterRef('product')))
+        ).annotate(eaten=Subquery(masses.filter(product=F('product')).values('eaten_mass')[:1])*F('value')/100)
         sums = eaten_nutritions.values('nutrition').annotate(sum=Sum('eaten')).order_by()
-
         return Response(sums)
+
         
