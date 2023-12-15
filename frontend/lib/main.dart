@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:calcounter/charts/main.dart';
 import 'package:calcounter/container/detail.dart';
 import 'package:calcounter/container/history/widgets.dart';
 import 'package:calcounter/container/main.dart';
@@ -77,7 +78,12 @@ class NutritionsWidgetState extends State<NutritionsWidget> {
                     );
                   }
               );
-            })
+            }),
+            IconButton(
+                onPressed: () {
+                  GoRouter.of(context).goNamed('charts');
+                },
+                icon: Icon(Icons.network_locked))
           ]);
         }
         else {
@@ -120,6 +126,13 @@ Future<void> main() async {
               return NutritionsWidget();
             }
           ),
+          GoRoute(
+            name: 'charts',
+            path: '/charts',
+            builder: (context, state) {
+              return MainChart();
+            }
+          )
         ]),
         StatefulShellBranch(
             navigatorKey: productsNavigatorKey,
