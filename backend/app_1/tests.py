@@ -286,8 +286,35 @@ class logTestCase(TestCase):
         response = self.client.get(url, {'containers': [container.id]}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
-        self.assertEqual(queryset_list, [{'nutrition': 1, 'sum': 75.0}, {'nutrition': 2, 'sum': 7.5}])
+        self.assertEqual(queryset_list, [{'nutrition': 1, 'total_nutrition': 75.0}, {'nutrition': 2, 'total_nutrition': 7.5}])
 
     def test_2containers(self):
-        pass
+        today = timezone.now()
+        yesterday = timezone.now() - timezone.timedelta(days=1)
+        nutrition_1 = Nutrition.objects.create(name='nutrition_1')
+        nutrition_2 = Nutrition.objects.create(name='nutriton_2')
+        product_1 = Product.objects.create(name='product_1')
+        product_2 = Product.objects.create(name='product_2')
+        product_3 = Product.objects.create(name='not_in_container')
+        ProductNutrition.objects.create(product=product_1, nutrition=nutrition_1, value=100)
+        ProductNutrition.objects.create(product=product_1, nutrition=nutrition_2, value=10)
+        ProductNutrition.objects.create(product=product_2, nutrition=nutrition_1, value=200)
+        ProductNutrition.objects.create(product=product_2, nutrition=nutrition_2, value=20)
+        ProductNutrition.objects.create(product=product_3, nutrition=nutrition_1, value=50)
+        ProductNutrition.objects.create(product=product_3, nutrition=nutrition_2, value=5)
+        container_1 = Container.objects.create(name='jar1')
+        container_2 = Container.objects.create(name='jar2')
+        ContainerProduct.objects.create(container=container_1, product=product_1, mass=500)
+        ContainerProduct.objects.create(container=container_2, product=product_2, mass=500)
 
+        for container in [container_1, container_2]:
+            ContainerMass.objects.create(container=container, mass=500, date=yesterday)
+            ContainerMass.objects.create(container=container, mass=450, date=yesterday + timezone.timedelta(minutes=1))
+            ContainerMass.objects.create(container=container, mass=420, date=today)
+            ContainerMass.objects.create(container=container, mass=400, date=today + timezone.timedelta(minutes=1))
+
+        url = reverse('log')
+        response = self.client.get(url, {'containers': [container_1.id, container_2.id]}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        queryset_list = response.json()
+        self.assertEqual(queryset_list, [{'nutrition': 1, 'total_nutrition': 150.0}, {'nutrition': 2, 'total_nutrition': 15.0}])
