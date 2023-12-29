@@ -1,4 +1,4 @@
-from datetime import timedelta
+from django.utils import timezone
 from rest_framework import serializers
 from app_1.models import *
 
@@ -22,13 +22,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class EatenRecordSerializer(serializers.Serializer):
     mass = serializers.FloatField()
-    date = serializers.DateTimeField(default=timezone.now())
-    second_date = serializers.DateTimeField(read_only=True)
-
-    def add_sec(self, data):
-        second_date = data['date'] + timedelta(seconds=1)
-        data['second_date'] = second_date
-        return data
+    date = serializers.DateTimeField(required=False)
 
 class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)

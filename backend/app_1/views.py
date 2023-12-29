@@ -35,10 +35,20 @@ class ProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         serializer = EatenRecordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        mass = serializer.data['mass']
+        date = serializer.data.get('date', timezone.now())
+
+        if isinstance(date, str):
+            date = timezone.datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+
+        modified_date = date + timezone.timedelta(seconds=1)
+
         container = Container.objects.create(name=product)
-        ContainerProduct.objects.create(container=container, product=product, mass=serializer.data['mass'])
-        ContainerMass.objects.create(container=container, mass=serializer.data['mass'], date=serializer.data['date'])
-        ContainerMass.objects.create(container=container, mass=0, date=serializer.data['second_date'])
+        ContainerProduct.objects.create(container=container, product=product, mass=mass)
+        ContainerMass.objects.create(container=container, mass=mass, date=date)
+        ContainerMass.objects.create(container=container, mass=0, date=modified_date)
+
         return Response(status=status.HTTP_201_CREATED)
     
 class ContainerViewSet(viewsets.ModelViewSet):
