@@ -22,7 +22,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class EatenRecordSerializer(serializers.Serializer):
     mass = serializers.FloatField()
-    date = serializers.DateTimeField(required=False)
+    date = serializers.DateTimeField(required=False, format="%Y-%m-%dT%H:%M:%SZ")
 
 class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)

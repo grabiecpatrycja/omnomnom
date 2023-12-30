@@ -36,11 +36,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = EatenRecordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        mass = serializer.data['mass']
-        date = serializer.data.get('date', timezone.now())
-
-        if isinstance(date, str):
-            date = timezone.datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+        mass = serializer.validated_data['mass']
+        date = serializer.validated_data.get('date', timezone.now())
 
         modified_date = date + timezone.timedelta(seconds=1)
 
