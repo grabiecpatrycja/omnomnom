@@ -45,13 +45,11 @@ class ContainerViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def products(self, request, pk=None):
         container = self.get_object()
+        container_product = ContainerProduct.objects.filter(container=container)
+        container_product.delete()
+
         for d in request.data:
-            product = d.get('product')
-            try:
-                container_product = ContainerProduct.objects.get(container=container, product=product)
-                serializer = ContainerProductSerialzier(container_product, data=d)
-            except ContainerProduct.DoesNotExist:
-                serializer = ContainerProductSerialzier(data=d)
+            serializer = ContainerProductSerialzier(data=d)
 
             serializer.is_valid(raise_exception=True)
             serializer.save(container=container)
