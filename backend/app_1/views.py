@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -34,7 +35,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         serializer = EatenRecordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(product=product)
+
+        mass = serializer.validated_data['mass']
+        date = serializer.validated_data.get('date', timezone.now())
+
+        second_later = date + timezone.timedelta(seconds=1)
+
+        container = Container.objects.create(name=product)
+        ContainerProduct.objects.create(container=container, product=product, mass=mass)
+        ContainerMass.objects.create(container=container, mass=mass, date=date)
+        ContainerMass.objects.create(container=container, mass=0, date=second_later)
+
         return Response(status=status.HTTP_201_CREATED)
     
 class ContainerViewSet(viewsets.ModelViewSet):
