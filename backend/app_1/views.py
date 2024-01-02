@@ -39,12 +39,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         mass = serializer.validated_data['mass']
         date = serializer.validated_data.get('date', timezone.now())
 
-        modified_date = date + timezone.timedelta(seconds=1)
+        second_later = date + timezone.timedelta(seconds=1)
 
         container = Container.objects.create(name=product)
         ContainerProduct.objects.create(container=container, product=product, mass=mass)
         ContainerMass.objects.create(container=container, mass=mass, date=date)
-        ContainerMass.objects.create(container=container, mass=0, date=modified_date)
+        ContainerMass.objects.create(container=container, mass=0, date=second_later)
 
         return Response(status=status.HTTP_201_CREATED)
     
