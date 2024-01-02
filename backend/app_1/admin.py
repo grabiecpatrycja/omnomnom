@@ -1,5 +1,5 @@
 from django.contrib import admin
-from app_1.models import Nutrition, Product, ProductNutrition, Container, ContainerProduct, ContainerMass
+from app_1.models import *
 
 admin.site.register(Nutrition)
 admin.site.register(Product)

@@ -32,7 +32,7 @@ class Container(models.Model):
     
 class ContainerProduct(models.Model):
     container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='product_entries')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_containers')
     mass = models.FloatField()
 
     class Meta:
