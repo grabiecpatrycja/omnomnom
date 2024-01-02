@@ -23,15 +23,7 @@ class ProductNutrition(models.Model):
 
     def __str__(self):
         return f"{self.product} - {self.nutrition}"
-
-class EatenRecord(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    mass = models.FloatField()
-    date = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"{self.product} - {self.mass}"
-    
+   
 class Container(models.Model):
     name = models.CharField(max_length=200)
 

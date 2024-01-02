@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:calcounter/container/detail.dart';
+import 'package:calcounter/container/history/widgets.dart';
+import 'package:calcounter/container/main.dart';
 import 'package:calcounter/entry.dart';
 import 'package:calcounter/http/nutrition.dart';
 import 'package:calcounter/product/composeProduct.dart';
@@ -100,7 +103,8 @@ class MyScaffold extends StatelessWidget {
 
 Future<void> main() async {
   final rootNagivatorKey = GlobalKey<NavigatorState>();
-  final shellNavigatorKey = GlobalKey<NavigatorState>();
+  final productsNavigatorKey = GlobalKey<NavigatorState>();
+  final containersNavigatorKey = GlobalKey<NavigatorState>();
 
   final router = GoRouter(
     navigatorKey: rootNagivatorKey,
@@ -117,7 +121,9 @@ Future<void> main() async {
             }
           ),
         ]),
-        StatefulShellBranch(routes: <RouteBase>[
+        StatefulShellBranch(
+            navigatorKey: productsNavigatorKey,
+            routes: <RouteBase>[
           GoRoute(
               path: '/products',
               builder: (context, state) {
@@ -140,7 +146,32 @@ Future<void> main() async {
                 )
               ]
           ),
-
+        ]),
+        StatefulShellBranch(
+            navigatorKey: containersNavigatorKey,
+            routes: <RouteBase>[
+          GoRoute(
+              path: '/containers',
+              builder: (context, state) {
+                return OContainers();
+              },
+              routes: <RouteBase>[
+                GoRoute(
+                    name: 'containerDetail',
+                    path: ':containerId',
+                    builder: (context, state) {
+                      return ContainerDetailWidget(id: int.parse(state.pathParameters['containerId']!));
+                    }
+                ),
+                GoRoute(
+                  name: 'containerHistory',
+                  path: ':containerId/history',
+                  builder: (context, state) {
+                    return ContainerHistoryPage(containerId: int.parse(state.pathParameters['containerId']!));
+                  }
+                )
+              ]
+          )
         ]),
       ]),
     ]
@@ -164,13 +195,11 @@ class CustomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('BottomNavigationBar Sample'),
-      ),
       body: shell,
+      appBar: AppBar(),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (index) {
-          shell.goBranch(index);
+          shell.goBranch(index, initialLocation: index == shell.currentIndex);
         },
         indicatorColor: Colors.amber[800],
         selectedIndex: shell.currentIndex,
@@ -182,6 +211,10 @@ class CustomNavigation extends StatelessWidget {
           ),
           NavigationDestination(
             icon: Icon(Icons.business),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.abc),
             label: 'Home',
           ),
         ]

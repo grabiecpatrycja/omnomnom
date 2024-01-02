@@ -41,7 +41,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         serializer = EatenRecordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(product=product)
+
+        mass = serializer.validated_data['mass']
+        date = serializer.validated_data.get('date', timezone.now())
+
+        second_later = date + timezone.timedelta(seconds=1)
+
+        container = Container.objects.create(name=product)
+        ContainerProduct.objects.create(container=container, product=product, mass=mass)
+        ContainerMass.objects.create(container=container, mass=mass, date=date)
+        ContainerMass.objects.create(container=container, mass=0, date=second_later)
+
         return Response(status=status.HTTP_201_CREATED)
 
 
@@ -53,27 +63,30 @@ class ContainerViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def products(self, request, pk=None):
         container = self.get_object()
+        container_product = ContainerProduct.objects.filter(container=container)
+        container_product.delete()
+
         for d in request.data:
-            product = d.get("product")
-            try:
-                container_product = ContainerProduct.objects.get(
-                    container=container, product=product
-                )
-                serializer = ContainerProductSerialzier(container_product, data=d)
-            except ContainerProduct.DoesNotExist:
-                serializer = ContainerProductSerialzier(data=d)
+            serializer = ContainerProductSerialzier(data=d)
 
             serializer.is_valid(raise_exception=True)
             serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=["POST"], serializer_class=ContainerMassSerializer)
+        
+    @action(detail=True, methods=['GET','POST'], serializer_class=ContainerMassSerializer)
     def mass(self, request, pk=None):
         container = self.get_object()
-        serializer = ContainerMassSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(container=container)
-        return Response(status=status.HTTP_201_CREATED)
+        if request.method == 'GET':
+            container_mass = ContainerMass.objects.filter(container=container)
+            serializer = ContainerMassSerializer(container_mass, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        if request.method == 'POST':
+            serializer = ContainerMassSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(container=container)
+            return Response(status=status.HTTP_201_CREATED)
+
 
 
 class log(APIView):
@@ -125,3 +138,5 @@ class log(APIView):
         )
 
         return Response(eaten_nutritions)
+
+

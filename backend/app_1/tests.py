@@ -134,25 +134,26 @@ class EatenRecordTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.product = Product.objects.create(name='test_product')
-
-    # def test_create_object(self):
-    #     data = {'product':self.product.id, 'mass': 100}
-    #     url = reverse('products-eat', args=[self.product.id])
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(EatenRecord.objects.count(), 1)
-    #     eaten_record = EatenRecord.objects.latest('date')
-    #     self.assertLessEqual(eaten_record.date - timezone.now(), timezone.timedelta(seconds=1))
     
-    # def test_create_object_with_date(self):
-    #     custom_date = datetime(1989, 2, 24, 11, 30, tzinfo=pytz.utc)
-    #     data = {'product':self.product.id, 'mass': 100, 'date': custom_date.isoformat()}
-    #     url = reverse('products-eat', args=[self.product.id])
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(EatenRecord.objects.count(), 1)
-    #     eaten_record = EatenRecord.objects.latest('date')
-    #     self.assertEqual(eaten_record.date, custom_date)
+    def test_create_object(self):
+        data = {'product':self.product.id, 'mass': 100}
+        url = reverse('products-eat', args=[self.product.id])
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ContainerMass.objects.count(), 2)
+        eaten = ContainerMass.objects.latest('date')
+        self.assertLessEqual(eaten.date - timezone.now(), timezone.timedelta(seconds=1))
+    
+    def test_create_object_with_date(self):
+        custom_date = datetime(1989, 2, 24, 11, 30, 00, tzinfo=pytz.utc)
+        data = {'product':self.product.id, 'mass': 100, 'date': custom_date.isoformat()}
+        url = reverse('products-eat', args=[self.product.id])
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ContainerMass.objects.count(), 2)
+        eaten= ContainerMass.objects.latest('date')
+        self.assertLessEqual(eaten.date - custom_date, timezone.timedelta(seconds=1))
+
 
 class ContainerTestCase(TestCase):
     def setUp(self):
@@ -204,6 +205,7 @@ class ContainerProductTestCase(TestCase):
         self.container = Container.objects.create(name='test_container')
         self.product_1 = Product.objects.create(name='test_product_1')
         self.product_2 = Product.objects.create(name='test_product_2')
+        self.product_3 = Product.objects.create(name='test_product_3')
 
     def test_create_object(self):
         data = [{'container':self.container.id, 'product': self.product_1.id, 'mass': 100},{'container':self.container.id, 'product': self.product_2.id, 'mass': 20}]
@@ -222,20 +224,27 @@ class ContainerProductTestCase(TestCase):
     def test_update_object(self):
         object_1 = ContainerProduct.objects.create(container=self.container, product=self.product_1, mass=100)
         object_2 = ContainerProduct.objects.create(container=self.container, product=self.product_2, mass=200)
+        object_3 = ContainerProduct.objects.create(container=self.container, product=self.product_3, mass=20)
         updated_data = [{'product': self.product_1.id, 'mass': 100}, {'product': self.product_2.id, 'mass': 180}]
         url = reverse('containers-products', args=[self.container.id])
         response = self.client.put(url, updated_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        object_1.refresh_from_db()
-        self.assertEqual(object_1.mass, 100)
-        object_2.refresh_from_db()
-        self.assertEqual(object_2.mass, 180)
+        container_product = ContainerProduct.objects.get(product=self.product_2)
+        self.assertEqual(container_product.mass, 180)
         self.assertEqual(ContainerProduct.objects.count(), 2)
 
 class ContainerMassTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.container = Container.objects.create(name='test_container')
+
+    def test_get_objects(self):
+        ContainerMass.objects.create(container=self.container, mass=500)
+        ContainerMass.objects.create(container=self.container, mass=400)
+        url = reverse('containers-mass', args=[self.container.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ContainerMass.objects.count(), 2)        
 
     def test_create_object(self):
         data = {'container':self.container.id, 'mass': 500}

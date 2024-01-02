@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from app_1.models import *
 
@@ -20,8 +21,8 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class EatenRecordSerializer(serializers.Serializer):
-    product = serializers.PrimaryKeyRelatedField(read_only=True)
-
+    mass = serializers.FloatField()
+    date = serializers.DateTimeField(required=False, format="%Y-%m-%dT%H:%M:%SZ")
 
 class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)
