@@ -5,16 +5,19 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from app_1.models import *
 from app_1.serializers import *
 
 
 class NutritionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Nutrition.objects.all()
     serializer_class = NutritionSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Product.objects.prefetch_related("nutrition_entries__nutrition")
     serializer_class = ProductSerializer
 
@@ -56,6 +59,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class ContainerViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Container.objects.prefetch_related("product_entries__product")
     serializer_class = ContainerSerializer
 
@@ -90,6 +94,7 @@ class ContainerViewSet(viewsets.ModelViewSet):
 
 
 class log(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         containers_id = request.GET.getlist("containers")
 
