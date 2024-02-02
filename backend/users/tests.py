@@ -9,7 +9,7 @@ class RegistrationTestCase(TestCase):
         self.client = APIClient()
 
     def test_create_user(self):
-        data = {'first_name': 'name', 'email': 'name@email.com', 'password': 'password'}
+        data = {'username': 'name', 'email': 'name@email.com', 'password': 'password'}
         url = reverse('register')
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
