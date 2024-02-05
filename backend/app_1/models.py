@@ -1,13 +1,16 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class Nutrition(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     
     def __str__(self):
         return self.name
     
 class Product(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
 
     def __str__(self):
@@ -25,6 +28,7 @@ class ProductNutrition(models.Model):
         return f"{self.product} - {self.nutrition}"
    
 class Container(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
 
     def __str__(self):

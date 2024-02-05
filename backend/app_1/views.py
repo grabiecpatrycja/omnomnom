@@ -1,36 +1,50 @@
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Subquery, OuterRef, F, Sum, Exists
+from django.db.models import Subquery, OuterRef, F, Sum
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from app_1.models import *
 from app_1.serializers import *
 
 
 class NutritionViewSet(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Nutrition.objects.all()
     serializer_class = NutritionSerializer
 
+    def get_queryset(self):
+        return Nutrition.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class ProductViewSet(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Product.objects.prefetch_related("nutrition_entries__nutrition")
     serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        return Product.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     @action(detail=True, methods=["PUT"], serializer_class=ProductNutritionSerializer)
     @transaction.atomic
     def nutritions(self, request, pk=None):
         product = self.get_object()
+        product_nutrition = ProductNutrition.objects.filter(product=product)
+        product_nutrition.delete()
+
         for d in request.data:
-            nutrition = d.get("nutrition")
-            try:
-                product_nutrition = ProductNutrition.objects.get(
-                    product=product, nutrition=nutrition
-                )
-                serializer = ProductNutritionSerializer(product_nutrition, data=d)
-            except ProductNutrition.DoesNotExist:
-                serializer = ProductNutritionSerializer(data=d)
+            serializer = ProductNutritionSerializer(data=d, context={'request': request})
 
             serializer.is_valid(raise_exception=True)
             serializer.save(product=product)
@@ -47,7 +61,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         second_later = date + timezone.timedelta(seconds=1)
 
-        container = Container.objects.create(name=product)
+        container = Container.objects.create(name=product, user=self.request.user)
         ContainerProduct.objects.create(container=container, product=product, mass=mass)
         ContainerMass.objects.create(container=container, mass=mass, date=date)
         ContainerMass.objects.create(container=container, mass=0, date=second_later)
@@ -56,8 +70,16 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class ContainerViewSet(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Container.objects.prefetch_related("product_entries__product")
     serializer_class = ContainerSerializer
+
+    def get_queryset(self):
+        return Container.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     @action(detail=True, methods=["PUT"], serializer_class=ContainerProductSerialzier)
     @transaction.atomic
@@ -67,7 +89,7 @@ class ContainerViewSet(viewsets.ModelViewSet):
         container_product.delete()
 
         for d in request.data:
-            serializer = ContainerProductSerialzier(data=d)
+            serializer = ContainerProductSerialzier(data=d, context={'request': request})
 
             serializer.is_valid(raise_exception=True)
             serializer.save(container=container)
@@ -87,11 +109,14 @@ class ContainerViewSet(viewsets.ModelViewSet):
             serializer.save(container=container)
             return Response(status=status.HTTP_201_CREATED)
 
-
-
 class log(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         containers_id = request.GET.getlist("containers")
+
+        if Container.objects.filter(user=self.request.user, id__in=containers_id).count() != len(containers_id):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         date_1 = timezone.now().date()
         o_container = OuterRef("container")
