@@ -95,8 +95,8 @@ class ContainerViewSet(viewsets.ModelViewSet):
             serializer.save(container=container)
         return Response(status=status.HTTP_201_CREATED)
         
-    @action(detail=True, methods=['GET','POST'], serializer_class=ContainerMassSerializer)
-    def mass(self, request, pk=None):
+    @action(detail=True, methods=['GET','POST', 'DELETE'], serializer_class=ContainerMassSerializer)
+    def mass(self, request, pk):
         container = self.get_object()
         if request.method == 'GET':
             container_mass = ContainerMass.objects.filter(container=container)
@@ -108,6 +108,11 @@ class ContainerViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save(container=container)
             return Response(status=status.HTTP_201_CREATED)
+        
+        if request.method == 'DELETE':
+            container_mass=ContainerMass.objects.get(id=pk)
+            container_mass.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 class log(APIView):
     authentication_classes = [JWTAuthentication]

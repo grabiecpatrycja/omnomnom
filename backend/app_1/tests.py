@@ -365,6 +365,15 @@ class ContainerMassTestCase(TestCase):
         container_mass = ContainerMass.objects.latest('date')
         self.assertEqual(container_mass.date, custom_date)
 
+    def test_delete_object(self):
+        object_1 = ContainerMass.objects.create(container=self.container, mass=200)
+        object_2 = ContainerMass.objects.create(container=self.container, mass=100)
+        url = reverse('containers-mass', args=[self.container.id])
+        response = self.client.delete(url, {'id': [object_2.id]}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(ContainerMass.objects.count(), 1)
+
+
 class logTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
