@@ -31,7 +31,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        return Product.objects.filter(user=self.request.user)
+        queryset = super().get_queryset()
+        return queryset.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -58,12 +59,13 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         mass = serializer.validated_data['mass']
         date = serializer.validated_data.get('date', timezone.now())
+        meal = serializer.validated_data['meal']
 
         second_later = date + timezone.timedelta(seconds=1)
 
         container = Container.objects.create(name=product, user=self.request.user)
         ContainerProduct.objects.create(container=container, product=product, mass=mass)
-        ContainerMass.objects.create(container=container, mass=mass, date=date)
+        ContainerMass.objects.create(container=container, mass=mass, date=date, meal=meal)
         ContainerMass.objects.create(container=container, mass=0, date=second_later)
 
         return Response(status=status.HTTP_201_CREATED)
@@ -76,7 +78,8 @@ class ContainerViewSet(viewsets.ModelViewSet):
     serializer_class = ContainerSerializer
 
     def get_queryset(self):
-        return Container.objects.filter(user=self.request.user)
+        queryset = super().get_queryset()
+        return queryset.filter(user=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -113,10 +116,12 @@ class ContainerViewSet(viewsets.ModelViewSet):
             container_mass=ContainerMass.objects.get(id=pk)
             container_mass.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+            
 
-class log(APIView):
+class EatenInContainers(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         containers_id = request.GET.getlist("containers")
 
@@ -131,16 +136,16 @@ class log(APIView):
             .order_by("-date")
             .values("mass")[:1]
         )
+
         mass_2 = Subquery(
             ContainerMass.objects.filter(container=o_container, date__date__lt=date_1)
             .order_by("-date")
             .values("mass")[:1]
         )
-        product_initial_mass = Subquery(
+
+        container_initial_mass = Subquery(
             ContainerProduct.objects.filter(container=o_container)
-            .values(
-                "container",
-            )
+            .values("container")
             .annotate(initial_mass=Sum("mass"))
             .values("initial_mass")[:1]
         )
@@ -149,7 +154,7 @@ class log(APIView):
             ContainerProduct.objects.filter(
                 container=o_container, product=OuterRef("product")
             )
-            .annotate(eaten_mass=(mass_2 - mass_1) * F("mass") / product_initial_mass)
+            .annotate(eaten_mass=(mass_2 - mass_1) * F("mass") / container_initial_mass)
             .values("eaten_mass")[:1]
         )
 
@@ -162,7 +167,7 @@ class log(APIView):
             .filter(container__in=containers_id)
             .annotate(eaten=product_eaten * F("value") / 100)
             .values(
-                "nutrition",
+                "nutrition"
             )
             .annotate(total_nutrition=Sum("eaten"))
         )
@@ -170,3 +175,79 @@ class log(APIView):
         return Response(eaten_nutritions)
 
 
+class DailyEaten(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        date = request.GET.get('date')
+
+        meals = [choice[0] for choice in ContainerMass._meta.get_field('meal').choices]
+
+        results = []
+
+        for meal in meals:
+
+            containers = Container.objects.filter(
+                user=request.user,
+                mass_containers__date__date=date,
+                mass_containers__meal=meal
+            )
+
+            o_container=OuterRef("container")
+
+            mass_1 = Subquery(
+                ContainerMass.objects.filter(
+                    container=o_container, date__date=date, meal=meal
+                    )
+                .order_by('-date')
+                .values('mass')[:1]
+            )
+
+
+            mass_2 = Subquery(
+                ContainerMass.objects.filter(
+                    container=o_container, 
+                    date__lt=Subquery(
+                        ContainerMass.objects.filter(container=o_container, date__date=date, meal=meal).order_by('-date').values('date')[:1]
+                    )
+                )
+                .order_by('-date')
+                .values('mass')[:1]
+            )
+
+
+            container_initial_mass = Subquery(
+                ContainerProduct.objects.filter(container=o_container)
+                .values("container")
+                .annotate(initial_mass=Sum("mass"))
+                .values("initial_mass")[:1]
+            )
+
+
+            product_eaten = Subquery(
+                ContainerProduct.objects.filter(
+                    container=o_container, product=OuterRef("product")
+                )
+                .annotate(eaten_mass=(mass_2 - mass_1) * F("mass") / container_initial_mass)
+                .values("eaten_mass")[:1]
+            )
+
+            eaten_nutritions = (
+                ProductNutrition.objects.values(
+                    "nutrition",
+                    "product",
+                    container=F("product__product_containers__container__id"),
+                )
+                .filter(container__in=containers)
+                .annotate(eaten=product_eaten * F("value") / 100)
+                .values(
+                    "nutrition"
+                )
+                .annotate(total_nutrition=Sum("eaten"))
+            )
+
+            results.append([meal, eaten_nutritions])
+
+        return Response(results)

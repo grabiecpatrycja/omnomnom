@@ -46,9 +46,21 @@ class ContainerProduct(models.Model):
         return f"{self.container} - {self.product}"
     
 class ContainerMass(models.Model):
-    container = models.ForeignKey(Container, on_delete=models.PROTECT)
+    meals = [
+        ('B', 'breakfast'),
+        ('L', 'lunch'),
+        ('D', 'dinner'),
+        ('Sn', 'snack'),
+        ('Su', 'supper')
+    ]
+
+    container = models.ForeignKey(Container, on_delete=models.PROTECT, related_name='mass_containers')
     mass = models.FloatField()
     date = models.DateTimeField(default=timezone.now)
+    meal = models.CharField(max_length=10, choices=meals, null=True, default=None)
+
+    class Meta:
+        unique_together = ["date", "meal"]
 
     def __str__(self):
         return f"{self.container} - {self.mass}"
