@@ -183,11 +183,9 @@ class DailyEaten(APIView):
 
         date = request.GET.get('date')
 
-        meals = [choice[0] for choice in ContainerMass._meta.get_field('meal').choices]
+        results = {}
 
-        results = []
-
-        for meal in meals:
+        for meal in ContainerMass.MealChoices.values:
 
             containers = Container.objects.filter(
                 user=request.user,
@@ -248,6 +246,6 @@ class DailyEaten(APIView):
                 .annotate(total_nutrition=Sum("eaten"))
             )
 
-            results.append([meal, eaten_nutritions])
+            results[meal] = eaten_nutritions
 
         return Response(results)

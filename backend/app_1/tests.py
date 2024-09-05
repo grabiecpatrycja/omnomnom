@@ -434,6 +434,7 @@ class EatenInContainersTestCase(TestCase):
 
 class DailyEatenTestCase(TestCase):
     def setUp(self):
+        self.maxDiff = None
         self.client = APIClient()
         self.user = User.objects.create(username='testuser', password='testpassword')
         today = timezone.now()
@@ -462,7 +463,7 @@ class DailyEatenTestCase(TestCase):
         ContainerMass.objects.create(container=self.container_1, mass=625, date=today, meal='B')
         ContainerMass.objects.create(container=self.container_2, mass=450, date=today, meal='B')
         ContainerMass.objects.create(container=self.container_1, mass=575, date=today + timezone.timedelta(minutes=1), meal='L')
-        ContainerMass.objects.create(container=self.container_2, mass=0, date=today + timezone.timedelta(minutes=1), meal='Sn')
+        ContainerMass.objects.create(container=self.container_2, mass=400, date=today + timezone.timedelta(minutes=1), meal='Sn')
 
 
         self.client.force_authenticate(user=self.user)
@@ -474,11 +475,12 @@ class DailyEatenTestCase(TestCase):
         response = self.client.get(url, {'date': date}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
-        self.assertEqual(queryset_list, [['B', [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}]],
-        ['L', [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}]],
-        ['D', [{'nutrition': 1, 'total_nutrition': 37.5}, {'nutrition': 2, 'total_nutrition': 3.75}]],
-        ['Sn', []],
-        ['Su', []]])  
+        self.assertEqual(queryset_list, {
+            'B': [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'L': [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'D': [{'nutrition': 1, 'total_nutrition': 37.5}, {'nutrition': 2, 'total_nutrition': 3.75}],
+            'Sn': [],
+            'Su': []})
 
     def test_two_containers(self):
         date = timezone.now().date().isoformat()
@@ -486,9 +488,10 @@ class DailyEatenTestCase(TestCase):
         response = self.client.get(url, {'date': date}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
-        self.assertEqual(queryset_list, [['B', [{'nutrition': 1, 'total_nutrition': 150}, {'nutrition': 2, 'total_nutrition': 15}]],
-        ['L', [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}]],
-        ['D', []],
-        ['Sn', [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}]],
-        ['Su', []]])   
+        self.assertEqual(queryset_list, {
+            'B': [{'nutrition': 1, 'total_nutrition': 150.0}, {'nutrition': 2, 'total_nutrition': 15.0}],
+            'L': [{'nutrition': 1, 'total_nutrition': 75.0}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'D': [],
+            'Sn': [{'nutrition': 1, 'total_nutrition': 75.0}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'Su': []})   
      
