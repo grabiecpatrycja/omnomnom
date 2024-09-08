@@ -90,6 +90,12 @@ class CalculateTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
         UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', activity=1.6, user=self.user)
 
+    def test_no_authentication(self):
+        self.client.force_authenticate(user=None)
+        url = reverse('calculate')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_calculation(self):
         url = reverse('calculate')
         response = self.client.get(url, format='json')
