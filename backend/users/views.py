@@ -58,3 +58,4 @@ class Calculate(APIView):
 
 
         return Response(result)
+        
