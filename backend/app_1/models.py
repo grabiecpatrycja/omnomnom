@@ -63,3 +63,4 @@ class ContainerMass(models.Model):
 
     def __str__(self):
         return f"{self.container} - {self.mass}"
+        

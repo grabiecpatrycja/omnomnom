@@ -28,17 +28,9 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class EatenRecordSerializer(serializers.Serializer):
-    meals = [
-        ('B', 'breakfast'),
-        ('L', 'lunch'),
-        ('D', 'dinner'),
-        ('Sn', 'snack'),
-        ('Su', 'supper')
-    ]
-
     mass = serializers.FloatField()
     date = serializers.DateTimeField(required=False, format="%Y-%m-%dT%H:%M:%SZ")
-    meal = serializers.ChoiceField(choices=meals)
+    meal = serializers.ChoiceField(choices=ContainerMass.MealChoices.choices)
 
 class ContainerProductSerialzier(serializers.ModelSerializer):
     container = serializers.PrimaryKeyRelatedField(read_only=True)
