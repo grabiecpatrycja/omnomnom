@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -5,11 +6,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.models import User
-from django.db.models import F, Case, When, FloatField
-from django.db.models.functions import Power, Round, ExtractYear
-from django.utils import timezone
+from django.db.models import F, Case, When, FloatField, ExpressionWrapper, IntegerField
+from django.db.models.functions import Power, Round, Now, TruncDate, Floor
 from users.models import UserProfile
 from users.serializers import *
+from datetime import timedelta
+
 
 
 class RegisterView(APIView):
@@ -42,20 +44,22 @@ class Calculate(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self,request):
-        current_year = timezone.now().year
 
         result = (UserProfile.objects.filter(user=self.request.user)
-                .annotate(age=current_year-ExtractYear(F'birthdate'))
+                .annotate(age=Floor(
+                    ExpressionWrapper(
+                    (TruncDate(Now())-F('birthdate'))/timedelta(days=1)/365.25,
+                    output_field=FloatField())
+                ))
                 .annotate(BMI=Round(F('weight')/(Power(F('height')/100, 2)),2))
                 .annotate(BMR=Case(
                     When(gender='F', then=10*F('weight')+6.25*F('height')-5*F('age')-161),
                     When(gender='M', then=(10*F('weight')+6.25*F('height')-5*F('age')+5)),
-                    output_field=FloatField()
+                    output_field=IntegerField()
                 ))
-                .annotate(TMR=F('BMR')*F('activity'))
-                .values('BMI', 'BMR', 'TMR')
-        )
-
+                .annotate(TMR=Round(F('BMR')*F('activity'),0))
+                .values('age','BMI', 'BMR', 'TMR')
+            )
 
         return Response(result)
         

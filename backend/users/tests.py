@@ -40,15 +40,15 @@ class UserProfileTestCase(TestCase):
 
     def test_create_profile(self):
         birth_date = date(1989, 2, 24)
-        data = {'gender': 'F', 'weight': 60, 'height': 160, 'birthdate': birth_date}
+        data = {'gender': 'F', 'weight': 60, 'height': 160, 'birthdate': birth_date, 'activity': 1.4}
         url = reverse('userprofile-list')
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(UserProfile.objects.count(), 1)
 
     def test_get_profile(self):
-        UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', user=self.user)
-        UserProfile.objects.create(gender='M', weight=80, height=180, birthdate='1990-10-13', user=self.otheruser)
+        UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', activity=1.4, user=self.user)
+        UserProfile.objects.create(gender='M', weight=80, height=180, birthdate='1990-10-13', activity=1.6,  user=self.otheruser)
         url = reverse('userprofile-list')
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -101,5 +101,7 @@ class CalculateTestCase(TestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
-        self.assertEqual(queryset_list, [{'BMI': 23.44, 'BMR': 1264.0, 'TMR': 2022.4}])
+        self.assertEqual(queryset_list, [{'age':35, 'BMI': 23.44, 'BMR': 1264, 'TMR': 2022}])
+
+      
 
