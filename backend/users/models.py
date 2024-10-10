@@ -12,4 +12,4 @@ class UserProfile(models.Model):
     weight = models.FloatField(null=True, blank=True)
     height = models.FloatField(null=True, blank=True)
     birthdate = models.DateField(null=True, blank=True)
-    activity = models.FloatField()
+    activity = models.FloatField(null=True, blank=True)

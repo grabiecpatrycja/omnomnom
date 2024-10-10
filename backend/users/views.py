@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -57,8 +56,8 @@ class Calculate(APIView):
                     When(gender='M', then=(10*F('weight')+6.25*F('height')-5*F('age')+5)),
                     output_field=IntegerField()
                 ))
-                .annotate(TMR=Round(F('BMR')*F('activity'),0))
-                .values('age','BMI', 'BMR', 'TMR')
+                .annotate(TDEE=Round(F('BMR')*F('activity'),0))
+                .values('age','BMI', 'BMR', 'TDEE')
             )
 
         return Response(result)

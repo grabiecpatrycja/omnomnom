@@ -5,6 +5,7 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from users.models import UserProfile
 from datetime import date
+from freezegun import freeze_time
 
 class RegistrationTestCase(TestCase):
     def setUp(self):
@@ -56,16 +57,16 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(len(queryset_list), 1)
 
     def test_update_profile(self):
-        object = UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', user=self.user)
+        object = UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', activity=1.4, user=self.user)
         updated_data = {'weight': 55}
         url = reverse('userprofile-detail', args=[object.id])
-        response = self.client.put(url, updated_data, format='json')
+        response = self.client.patch(url, updated_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         object.refresh_from_db()
         self.assertEqual(response.data['weight'], 55)
 
     def test_delete_profile(self):
-        object = UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', user=self.user)
+        object = UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', activity=1.6, user=self.user)
         UserProfile.objects.create(gender='M', weight=80, height=180, birthdate='1990-10-13', user=self.otheruser)
         url = reverse('userprofile-detail', args=[object.id])
         response = self.client.delete(url,format='json')
@@ -75,7 +76,7 @@ class UserProfileTestCase(TestCase):
             object.refresh_from_db()
     
     def test_create_duplicate_profile(self):
-        UserProfile.objects.create(gender='F', weight=80, height=170, birthdate='1990-10-13', user=self.user)
+        UserProfile.objects.create(gender='F', weight=80, height=170, birthdate='1990-10-13', activity=1.4, user=self.user)
         birth_date = date(1989, 2, 24)
         data = {'gender': 'F', 'weight': 60, 'height': 160, 'birthdate': birth_date}
         url = reverse('userprofile-list')
@@ -83,6 +84,7 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(UserProfile.objects.count(), 1)
 
+@freeze_time("2024-08-30")
 class CalculateTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -101,7 +103,7 @@ class CalculateTestCase(TestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
-        self.assertEqual(queryset_list, [{'age':35, 'BMI': 23.44, 'BMR': 1264, 'TMR': 2022}])
+        self.assertEqual(queryset_list, [{'age':35, 'BMI': 23.44, 'BMR': 1264, 'TDEE': 2022}])
 
       
 
