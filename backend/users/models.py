@@ -9,7 +9,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     gender = models.CharField(max_length=10, choices=GenderChoices.choices, null=True, blank=True)
-    weight = models.FloatField(null=True, blank=True)
-    height = models.FloatField(null=True, blank=True)
-    birthdate = models.DateField(null=True, blank=True)
-    activity = models.FloatField(null=True, blank=True)
+    weight = models.FloatField(blank=True)
+    height = models.FloatField(blank=True)
+    birthdate = models.DateField(blank=True)
+    activity = models.FloatField(blank=True)
