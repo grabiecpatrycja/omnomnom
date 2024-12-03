@@ -67,7 +67,7 @@ class UserProfileTestCase(TestCase):
 
     def test_delete_profile(self):
         object = UserProfile.objects.create(gender='F', weight=60, height=160, birthdate='1989-02-24', activity=1.6, user=self.user)
-        UserProfile.objects.create(gender='M', weight=80, height=180, birthdate='1990-10-13', user=self.otheruser)
+        UserProfile.objects.create(gender='M', weight=80, height=180, activity=1.2, birthdate='1990-10-13', user=self.otheruser)
         url = reverse('userprofile-detail', args=[object.id])
         response = self.client.delete(url,format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
