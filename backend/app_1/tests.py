@@ -195,7 +195,7 @@ class EatenRecordTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_create_object(self):
-        data = {'mass': 100}
+        data = {'mass': 100, 'meal': 'L'}
         url = reverse('products-eat', args=[self.product.id])
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -205,7 +205,7 @@ class EatenRecordTestCase(TestCase):
     
     def test_create_object_with_date(self):
         custom_date = datetime(1989, 2, 24, 11, 30, 00, tzinfo=pytz.utc)
-        data = {'mass': 100, 'date': custom_date.isoformat()}
+        data = {'mass': 100, 'date': custom_date.isoformat(), 'meal': 'D'}
         url = reverse('products-eat', args=[self.product.id])
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -340,14 +340,14 @@ class ContainerMassTestCase(TestCase):
 
     def test_get_objects(self):
         ContainerMass.objects.create(container=self.container, mass=500)
-        ContainerMass.objects.create(container=self.container, mass=400)
+        ContainerMass.objects.create(container=self.container, mass=400, meal='B')
         url = reverse('containers-mass', args=[self.container.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(ContainerMass.objects.count(), 2)        
 
     def test_create_object(self):
-        data = {'mass': 500}
+        data = {'mass': 500, 'meal': 'L'}
         url = reverse('containers-mass', args=[self.container.id])
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -357,7 +357,7 @@ class ContainerMassTestCase(TestCase):
 
     def test_create_object_with_date(self):
         custom_date = datetime(1989, 2, 24, 11, 30, tzinfo=pytz.utc)
-        data = {'mass': 100, 'date': custom_date.isoformat()}
+        data = {'mass': 100, 'date': custom_date.isoformat(), 'meal':'D'}
         url = reverse('containers-mass', args=[self.container.id])
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -365,7 +365,16 @@ class ContainerMassTestCase(TestCase):
         container_mass = ContainerMass.objects.latest('date')
         self.assertEqual(container_mass.date, custom_date)
 
-class logTestCase(TestCase):
+    def test_delete_object(self):
+        object_1 = ContainerMass.objects.create(container=self.container, mass=200)
+        object_2 = ContainerMass.objects.create(container=self.container, mass=100)
+        url = reverse('containers-mass', args=[self.container.id])
+        response = self.client.delete(url, {'id': [object_2.id]}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(ContainerMass.objects.count(), 1)
+
+
+class EatenInContainersTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create(username='testuser', password='testpassword')
@@ -404,20 +413,85 @@ class logTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_one_container(self):
-        url = reverse('log')
+        url = reverse('EatenInContainers')
         response = self.client.get(url, {'containers': [self.container_1.id]}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
         self.assertEqual(queryset_list, [{'nutrition': 1, 'total_nutrition': 75.0}, {'nutrition': 2, 'total_nutrition': 7.5}])
 
     def test_two_containers(self):
-        url = reverse('log')
+        url = reverse('EatenInContainers')
         response = self.client.get(url, {'containers': [self.container_1.id, self.container_2.id]}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         queryset_list = response.json()
         self.assertEqual(queryset_list, [{'nutrition': 1, 'total_nutrition': 150.0}, {'nutrition': 2, 'total_nutrition': 15.0}])
     
     def test_otheruser(self):
-        url = reverse('log')
+        url = reverse('EatenInContainers')
         response = self.client.get(url, {'containers': [self.container_1.id, self.container_3.id]}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class DailyEatenTestCase(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+        self.client = APIClient()
+        self.user = User.objects.create(username='testuser', password='testpassword')
+        today = timezone.now()
+        yesterday = timezone.now() - timezone.timedelta(days=1)
+        two_days_ago = timezone.now() - timezone.timedelta(days=2)
+        self.nutrition_1 = Nutrition.objects.create(name='nutrition_1', user=self.user)
+        self.nutrition_2 = Nutrition.objects.create(name='nutriton_2', user=self.user)
+        self.product_1 = Product.objects.create(name='product_1', user=self.user)
+        self.product_2 = Product.objects.create(name='product_2', user=self.user)
+        ProductNutrition.objects.create(product=self.product_1, nutrition=self.nutrition_1, value=100)
+        ProductNutrition.objects.create(product=self.product_1, nutrition=self.nutrition_2, value=10)
+        ProductNutrition.objects.create(product=self.product_2, nutrition=self.nutrition_1, value=200)
+        ProductNutrition.objects.create(product=self.product_2, nutrition=self.nutrition_2, value=20)
+        self.container_1 = Container.objects.create(name='jar_1', user=self.user)
+        self.container_2 = Container.objects.create(name='jar_2', user=self.user)
+        ContainerProduct.objects.create(container=self.container_1, product=self.product_1, mass=500)
+        ContainerProduct.objects.create(container=self.container_1, product=self.product_2, mass=500)
+        ContainerProduct.objects.create(container=self.container_2, product=self.product_1, mass=500)
+        ContainerProduct.objects.create(container=self.container_2, product=self.product_2, mass=500)
+
+        ContainerMass.objects.create(container=self.container_1, mass=800, date=two_days_ago, meal='B')
+        ContainerMass.objects.create(container=self.container_2, mass=500, date=two_days_ago, meal='B')
+        ContainerMass.objects.create(container=self.container_1, mass=750, date=yesterday, meal='B')
+        ContainerMass.objects.create(container=self.container_1, mass=700, date=yesterday + timezone.timedelta(minutes=1), meal='L')
+        ContainerMass.objects.create(container=self.container_1, mass=675, date=yesterday + timezone.timedelta(minutes=2), meal='D')
+        ContainerMass.objects.create(container=self.container_1, mass=625, date=today, meal='B')
+        ContainerMass.objects.create(container=self.container_2, mass=450, date=today, meal='B')
+        ContainerMass.objects.create(container=self.container_1, mass=575, date=today + timezone.timedelta(minutes=1), meal='L')
+        ContainerMass.objects.create(container=self.container_2, mass=400, date=today + timezone.timedelta(minutes=1), meal='Sn')
+
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_one_container_yesterday(self):
+        yesterday = timezone.now().date() - timezone.timedelta(days=1)
+        date = yesterday.isoformat()
+        url = reverse('DailyEaten')
+        response = self.client.get(url, {'date': date}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        queryset_list = response.json()
+        self.assertEqual(queryset_list, {
+            'B': [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'L': [{'nutrition': 1, 'total_nutrition': 75}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'D': [{'nutrition': 1, 'total_nutrition': 37.5}, {'nutrition': 2, 'total_nutrition': 3.75}],
+            'Sn': [],
+            'Su': []})
+
+    def test_two_containers(self):
+        date = timezone.now().date().isoformat()
+        url = reverse('DailyEaten')
+        response = self.client.get(url, {'date': date}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        queryset_list = response.json()
+        self.assertEqual(queryset_list, {
+            'B': [{'nutrition': 1, 'total_nutrition': 150.0}, {'nutrition': 2, 'total_nutrition': 15.0}],
+            'L': [{'nutrition': 1, 'total_nutrition': 75.0}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'D': [],
+            'Sn': [{'nutrition': 1, 'total_nutrition': 75.0}, {'nutrition': 2, 'total_nutrition': 7.5}],
+            'Su': []})   
+     
